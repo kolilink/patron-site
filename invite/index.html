@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+    <title>On t'invite sur Patron.</title>
+    <meta name="description" content="Note tes ventes, suis tes crédits avec ou sans internet" />
+
+    <!-- Open Graph / Twitter — the WhatsApp preview card. Static on purpose:
+       this page is served by static GitHub Pages, so og:title is the generic
+       invitation title (the inviter's name is rendered client-side for humans,
+       not for crawlers — WhatsApp's crawler does not run JS). -->
+    <meta property="og:title" content="On t'invite sur Patron." />
+    <meta property="og:description" content="Note tes ventes, suis tes crédits avec ou sans internet" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://patron.kolilink.com/invite" />
+    <meta property="og:image" content="https://patron.kolilink.com/invite/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <style>
+        :root {
+            --purple: #6366F1;
+            --purple-dark: #4F46E5;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, var(--purple) 0%, var(--purple-dark) 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .card {
+            max-width: 420px;
+            width: 100%;
+            transform: translateY(-28px);
+        }
+
+        h1 {
+            font-size: 26px;
+            line-height: 1.25;
+            margin: 0 0 12px;
+            font-weight: 700;
+        }
+
+        p.tagline {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0 0 26px;
+            opacity: .92;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 12px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--purple-dark);
+        }
+
+        .btn-primary:active {
+            opacity: .85;
+        }
+
+
+
+        .btn-play {
+            background: #fff;
+            color: #202124;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+        }
+
+        .btn-play .play-icon {
+            flex-shrink: 0;
+        }
+
+        .btn-play:active {
+            opacity: .85;
+        }
+
+
+
+        .foot {
+            margin-top: 8px;
+            font-size: 13px;
+            opacity: .75;
+        }
+
+
+
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1 id="title">On t'invite sur Patron.</h1>
+        <p class="tagline">Note tes ventes, suis tes crédits avec ou sans internet</p>
+
+        <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
+            target="_blank" rel="noopener">Télécharger sur l'App Store</a>
+
+        <a class="btn btn-play" id="store-play"
+            href="https://play.google.com/store/apps/details?id=com.awall.patron" target="_blank" rel="noopener">
+            <svg class="play-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <path fill="#00D7FE" d="M3 12 12 7.5 12 12Z" />
+                <path fill="#00F076" d="M3 12 12 12 12 16.5Z" />
+                <path fill="#FFCE00" d="M12 7.5 21 3 21 12 12 12Z" />
+                <path fill="#FF3A44" d="M12 12 21 12 21 21 12 16.5Z" />
+            </svg>
+            Télécharger sur Play Store
+        </a>
+
+        <div class="foot">Gratuit · Fait pour les commerçants</div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // Public values, same as the app client.
+            var SUPABASE_URL = 'https://jnxpujsyvbenqgjbvifh.supabase.co';
+            var ANON_KEY = 'sb_publishable_z2cta2M53RtwpGoWUV6LMQ_LoUkSjaD';
+            var PLAY_STORE_BASE = 'https://play.google.com/store/apps/details?id=com.awall.patron';
+            var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+            // The inviter id comes from /invite/<id> (404.html forwards that
+            // path here as ?i=<id>). Anything that is not a uuid is ignored.
+            function inviterId() {
+                try {
+                    var q = new URLSearchParams(window.location.search).get('i') || '';
+                    var m = window.location.pathname.replace(/\/+$/, '').match(/^\/invite\/([^\/]+)$/);
+                    var id = (q || (m ? m[1] : '')).trim();
+                    return UUID_RE.test(id) ? id.toLowerCase() : '';
+                } catch (e) {
+                    return '';
+                }
+            }
+
+            var id = inviterId();
+
+            var titleEl = document.getElementById('title');
+            var storePlay = document.getElementById('store-play');
+
+            // Attribution: the Play install referrer carries the inviter id.
+            // (iOS cold installs are unattributed by design.)
+            if (id) {
+                storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite=' + id);
+            }
+
+            function setTitle(name) {
+                var t = name ? '\u00AB ' + name + ' \u00BB t\u2019invite sur Patron.' : "On t'invite sur Patron.";
+                titleEl.textContent = t;
+                document.title = t;
+            }
+
+            // Inviter name (anon RPC). Any failure → the generic headline.
+            if (id) {
+                fetch(SUPABASE_URL + '/rest/v1/rpc/preview_inviter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': ANON_KEY,
+                        'Authorization': 'Bearer ' + ANON_KEY
+                    },
+                    body: JSON.stringify({ p_inviter_id: id })
+                })
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (data) {
+                        var name = data && data.valid && data.inviter_name ? String(data.inviter_name).trim() : '';
+                        setTitle(name);
+                    })
+                    .catch(function () { setTitle(''); });
+            }
+        })();
+    </script>
+</body>
+
+</html>
