@@ -5,15 +5,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-    <title>On t'invite sur Patron.</title>
-    <meta name="description" content="Note chaque vente et chaque personne qui te doit même sans internet." />
+    <title>On t'invite sur Patron</title>
+    <meta name="description" content="Note chaque vente et chaque personne qui te doit même sans internet" />
 
     <!-- Open Graph / Twitter — the WhatsApp preview card. Static on purpose:
        this page is served by static GitHub Pages, so og:title is the generic
        invitation title (the inviter's name is rendered client-side for humans,
        not for crawlers — WhatsApp's crawler does not run JS). -->
-    <meta property="og:title" content="On t'invite sur Patron." />
-    <meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet." />
+    <meta property="og:title" content="On t'invite sur Patron" />
+    <meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://patron.kolilink.com/invite" />
     <meta property="og:image" content="https://patron.kolilink.com/invite/og.png" />
@@ -73,14 +73,18 @@
         }
 
         h1 {
-            font-size: 26px;
+            /* Une seule ligne, quoi qu'il arrive : pas de retour à la
+               ligne, taille liée à l'écran, et le script réduit encore
+               si le nom est long. Aucun point en fin de phrase. */
+            font-size: clamp(18px, 6.1vw, 26px);
+            white-space: nowrap;
             line-height: 1.25;
             margin: 0 0 12px;
             font-weight: 700;
-            /* La place de deux lignes est réservée dès le départ et le
+            /* La place de la ligne est réservée dès le départ et le
                titre n'apparaît qu'une fois le nom résolu (fondu) :
                l'arrivée du nom ne déplace rien. */
-            min-height: 2.5em;
+            min-height: 1.25em;
             opacity: 0;
             transition: opacity .18s ease;
         }
@@ -145,8 +149,8 @@
 
 <body>
     <div class="card">
-        <h1 id="title">On t'invite sur Patron.</h1>
-        <p class="tagline">Note chaque vente et chaque personne qui te doit même sans internet.</p>
+        <h1 id="title">On t'invite sur Patron</h1>
+        <p class="tagline">Note chaque vente et chaque personne qui te doit même sans internet</p>
 
         <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
             target="_blank" rel="noopener">Télécharger sur l'App Store</a>
@@ -193,10 +197,22 @@
                 storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite=' + id);
             }
 
+            function fitTitle() {
+                // Une seule ligne quoi qu'il arrive : on repart de la
+                // taille CSS, puis on réduit jusqu'à ce que ça tienne.
+                var size = 26;
+                titleEl.style.fontSize = '';
+                while (titleEl.scrollWidth > titleEl.clientWidth && size > 14) {
+                    size -= 1;
+                    titleEl.style.fontSize = size + 'px';
+                }
+            }
+
             function setTitle(name) {
-                var t = name ? name + ' t\u2019invite sur Patron.' : "On t'invite sur Patron.";
+                var t = name ? name + ' t\u2019invite sur Patron' : "On t'invite sur Patron";
                 titleEl.textContent = t;
                 document.title = t;
+                fitTitle();
                 titleEl.classList.add('ready');
             }
 

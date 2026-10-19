@@ -22,12 +22,14 @@ const matches = (label, hay, re) => check(label, re.test(hay));
 const html = read('invite/index.html');
 
 // Les textes exacts de la page.
-contains("titre d'invitation", html, "On t'invite sur Patron.");
-contains('promesse', html, 'Note chaque vente et chaque personne qui te doit même sans internet.');
+contains("titre d'invitation", html, "On t'invite sur Patron");
+contains('promesse', html, 'Note chaque vente et chaque personne qui te doit même sans internet');
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, 'Gratuit et fait pour les vendeurs');
-matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron\./);
+matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
+notMatches('aucun point en fin de phrase (Patron.)', html, /Patron\./);
+notMatches('aucun point en fin de phrase (internet.)', html, /internet\./);
 notMatches('aucun guillemet autour du nom', html, /\\u00AB ' \+ name/);
 notMatches('aucune icône dans le bouton Play Store', html, /play-icon|<svg/);
 
@@ -38,7 +40,7 @@ notMatches('jamais le presse-papiers', html, /clipboard|execCommand/i);
 // La carte sociale, sur la page et sur le 404.
 for (const f of ['invite/index.html', '404.html']) {
   const h = read(f);
-  contains(`${f} : og:description`, h, '<meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet." />');
+  contains(`${f} : og:description`, h, '<meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet" />');
   contains(`${f} : og:image`, h, '<meta property="og:image" content="https://patron.kolilink.com/invite/og.png" />');
 }
 matches('404.html redirige vers /invite?i=', read('404.html'), /\/invite\?i=/);
