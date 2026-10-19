@@ -48,7 +48,12 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 24px;
+            /* Le bloc est centré dans l'espace restant au-dessus d'un grand
+               padding bas : le centre optique (là où l'œil lit « centré »)
+               est au-dessus du centre géométrique, et la barre d'adresse
+               iOS mange le bas de l'écran. Le centre du bloc tombe ainsi
+               vers ~40 % de la hauteur visible, le titre dans le tiers haut. */
+            padding: 24px 24px 14vh;
         }
 
         .card {
