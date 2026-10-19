@@ -27,7 +27,9 @@ contains('promesse', html, 'Note tes ventes, suis tes crédits avec ou sans inte
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, 'Gratuit · Fait pour les commerçants');
-matches('phrase nominative « X t’invite sur Patron. »', html, /\\u00AB ' \+ name \+ ' \\u00BB t\\u2019invite sur Patron\./);
+matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron\./);
+notMatches('aucun guillemet autour du nom', html, /\\u00AB ' \+ name/);
+notMatches('aucune icône dans le bouton Play Store', html, /play-icon|<svg/);
 
 // Ce qui ne doit jamais revenir : bouton copier, flux à code/jeton.
 notMatches('aucun flux presse-papiers ou code', html, /Copier le lien|Lien copié|J'ai déjà Patron|id="bridge"|preview_consumer_invite/);
