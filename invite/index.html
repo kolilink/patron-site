@@ -102,6 +102,14 @@
             min-height: 1.25em;
         }
 
+        /* La ligne en gras au-dessus de la promesse (V7). */
+        p.lede {
+            font-size: 18px;
+            line-height: 1.4;
+            margin: 0 0 8px;
+            font-weight: 700;
+        }
+
         p.tagline {
             font-size: 16px;
             line-height: 1.5;
@@ -241,6 +249,7 @@
 <body>
     <div class="card">
         <h1 id="title">On t'invite sur Patron</h1>
+        <p class="lede">Ton carnet, dans ton téléphone</p>
         <p class="tagline">Note chaque vente et chaque personne qui te doit même sans internet</p>
 
         <div id="stores">
@@ -284,6 +293,8 @@
             var ANON_KEY = 'sb_publishable_z2cta2M53RtwpGoWUV6LMQ_LoUkSjaD';
             var PLAY_STORE_BASE = 'https://play.google.com/store/apps/details?id=com.awall.patron';
             var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            // The short link's slug: 8 characters of the unambiguous alphabet (no I, L, O, 0, 1).
+            var SLUG_RE = /^[A-HJKMNP-Z2-9]{8}$/;
 
             // The inviter id comes from /invite/<id> (404.html forwards that
             // path here as ?i=<id>). Anything that is not a uuid is ignored.
@@ -298,16 +309,28 @@
                 }
             }
 
+            // The short link /invite/?s=<slug>. A malformed slug is ignored (generic page, never an error).
+            function inviterSlug() {
+                try {
+                    var s = (new URLSearchParams(window.location.search).get('s') || '').trim().toUpperCase();
+                    return SLUG_RE.test(s) ? s : '';
+                } catch (e) {
+                    return '';
+                }
+            }
+
             var id = inviterId();
+            var slug = id ? '' : inviterSlug();   // the uuid form keeps priority
 
             var titleEl = document.getElementById('title');
             var storePlay = document.getElementById('store-play');
 
             // Attribution: the Play install referrer carries the inviter id.
             // (iOS cold installs are unattributed by design.)
-            if (id) {
-                storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite=' + id);
+            function setReferrer(inviter) {
+                storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite=' + inviter);
             }
+            if (id) setReferrer(id);
 
             function fitTitle() {
                 // Une seule ligne quoi qu'il arrive : on repart de la
@@ -340,11 +363,35 @@
             }
 
             // Inviter name (anon RPC). Any failure → the generic headline.
-            if (!id) {
+            // Nothing to resolve (no uuid, no slug) → generic title, revealed at once.
+            if (!id && !slug) {
                 setTitle('');
                 reveal();
             }
             setTimeout(reveal, 400);
+            if (!id && slug) {
+                // Short link: the server resolves the slug. Valid → personalised title AND the Play referrer carries the
+                // RESOLVED inviter id (the app attributes by profile id); invalid or any failure → the generic page.
+                // Same single arrival: the card is revealed when the resolution is done (or at the 400 ms ceiling).
+                fetch(SUPABASE_URL + '/rest/v1/rpc/preview_inviter_by_slug', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': ANON_KEY,
+                        'Authorization': 'Bearer ' + ANON_KEY
+                    },
+                    body: JSON.stringify({ p_slug: slug })
+                })
+                    .then(function (res) { return res.ok ? res.json() : null; })
+                    .then(function (data) {
+                        var resolved = data && data.valid && UUID_RE.test(String(data.inviter_id || '')) ? String(data.inviter_id).toLowerCase() : '';
+                        if (!resolved) { setTitle(''); reveal(); return; }
+                        setReferrer(resolved);
+                        setTitle(data.inviter_name ? String(data.inviter_name).trim() : '');
+                        reveal();
+                    })
+                    .catch(function () { setTitle(''); reveal(); });
+            }
             if (id) {
                 fetch(SUPABASE_URL + '/rest/v1/rpc/preview_inviter', {
                     method: 'POST',
