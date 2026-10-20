@@ -270,7 +270,7 @@
             })();
         </script>
 
-        <div class="proof"><strong><span id="shop-count" class="num">130</span> commerces</strong> déjà sur Patron</div>
+        <div class="proof"><strong><span id="shop-count" class="num">131</span> commerces</strong> déjà sur Patron</div>
 
         <div class="foot">Gratuit et fait pour les vendeurs</div>
     </div>
@@ -363,37 +363,75 @@
                     })
                     .catch(function () { setTitle(''); reveal(); });
             }
+
+            // Le nombre vrai des commerces, lu en direct : la fonction
+            // publique public_shop_count ne renvoie QUE ce nombre (un
+            // agrégat — aucune ligne, aucune donnée). La clé anon est
+            // publique par conception ; c'est la fonction qui fait la
+            // frontière. Échec ou lenteur → le nombre figé dans la page
+            // (repli vérifié à chaque publication) prend le relais.
+            var countEl = document.getElementById('shop-count');
+            var baked = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
+            var countSettled = false;
+            function rollOnce(n) {
+                if (countSettled) return;
+                countSettled = true;
+                if (window.__rollProof) window.__rollProof(n);
+            }
+            fetch(SUPABASE_URL + '/rest/v1/rpc/public_shop_count', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': ANON_KEY,
+                    'Authorization': 'Bearer ' + ANON_KEY
+                },
+                body: '{}'
+            })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) {
+                    var n = (typeof data === 'number') ? data : null;
+                    rollOnce((typeof n === 'number' && isFinite(n) && n > 0) ? Math.round(n) : baked);
+                })
+                .catch(function () { rollOnce(baked); });
+            setTimeout(function () { rollOnce(baked); }, 900);
         })();
     </script>
     <script>
         // Le rouleau des chiffres : chaque chiffre défile dans sa
-        // fenêtre et s'arrête sur le nombre vrai. Sans JavaScript ou
-        // en mouvement réduit, le nombre reste écrit, immobile.
+        // fenêtre et s'arrête sur le nombre demandé par le script
+        // principal (le nombre vrai lu en direct, ou son repli).
+        // Sans appel ou en mouvement réduit, le nombre reste écrit,
+        // immobile.
         (function () {
             'use strict';
             var el = document.getElementById('shop-count');
             if (!el) return;
             var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduce) return;
-            var digits = el.textContent.trim().split('');
-            el.textContent = '';
-            digits.forEach(function (d, i) {
-                var reel = document.createElement('span');
-                reel.className = 'reel';
-                var strip = document.createElement('span');
-                strip.className = 'strip';
-                for (var n = 0; n <= 9; n++) {
-                    var c = document.createElement('span');
-                    c.textContent = n;
-                    strip.appendChild(c);
+            window.__rollProof = function (target) {
+                var digits = String(target).split('');
+                if (reduce) {
+                    el.textContent = digits.join('');
+                    return;
                 }
-                var last = document.createElement('span');
-                last.textContent = d;
-                strip.appendChild(last);
-                reel.appendChild(strip);
-                el.appendChild(reel);
-                setTimeout(function () { strip.style.transform = 'translateY(-10em)'; }, 550 + i * 70);
-            });
+                el.textContent = '';
+                digits.forEach(function (d, i) {
+                    var reel = document.createElement('span');
+                    reel.className = 'reel';
+                    var strip = document.createElement('span');
+                    strip.className = 'strip';
+                    for (var n = 0; n <= 9; n++) {
+                        var c = document.createElement('span');
+                        c.textContent = n;
+                        strip.appendChild(c);
+                    }
+                    var last = document.createElement('span');
+                    last.textContent = d;
+                    strip.appendChild(last);
+                    reel.appendChild(strip);
+                    el.appendChild(reel);
+                    setTimeout(function () { strip.style.transform = 'translateY(-10em)'; }, 550 + i * 70);
+                });
+            };
         })();
     </script>
 </body>

@@ -27,7 +27,8 @@ contains('promesse', html, 'Note chaque vente et chaque personne qui te doit mê
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, 'Gratuit et fait pour les vendeurs');
-contains('preuve (nombre de commerces vérifié)', html, '<span id="shop-count" class="num">130</span> commerces</strong> déjà sur Patron');
+contains('preuve (repli du nombre, vérifié)', html, '<span id="shop-count" class="num">131</span> commerces</strong> déjà sur Patron');
+contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
 matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
 notMatches('aucun point en fin de phrase (Patron.)', html, /Patron\./);
 notMatches('aucun point en fin de phrase (internet.)', html, /internet\./);
