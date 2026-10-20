@@ -142,7 +142,77 @@
             opacity: .75;
         }
 
+        /* La preuve, en bas : elle s'installe en fondu, sans jamais
+           voyager. Le nombre est vérifié à chaque publication du site
+           (commerces réels, comptes de test exclus) et épinglé par la
+           garde. */
+        .proof {
+            font-variant-numeric: tabular-nums;
+            margin-top: 14px;
+            font-size: 13.5px;
+            opacity: 0;
+            animation: proof-in .6s ease 1s forwards;
+        }
 
+        .proof strong {
+            font-weight: 700;
+        }
+
+        @keyframes proof-in {
+            to {
+                opacity: .88;
+            }
+        }
+
+        /* Les seuls chiffres en vert (le vert « Réglé » de l'app) ;
+           ils roulent sur place, dans leur fenêtre — la ligne et la
+           position du nombre ne bougent jamais. */
+        .proof .num {
+            color: #8CF0B3;
+        }
+
+        .reel {
+            display: inline-block;
+            height: 1em;
+            overflow: hidden;
+            position: relative;
+            top: .13em;
+        }
+
+        .strip {
+            display: flex;
+            flex-direction: column;
+            transition: transform .95s cubic-bezier(.22, .8, .24, 1);
+        }
+
+        .strip span {
+            display: block;
+            height: 1em;
+            line-height: 1;
+            text-align: center;
+        }
+
+        /* Les boutons sont ordonnés (le magasin de SON téléphone en
+           premier) avant d'apparaître : jamais le mauvais ordre. */
+        #stores {
+            opacity: 0;
+        }
+
+        #stores.ready {
+            opacity: 1;
+            transition: opacity .18s ease;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .proof {
+                animation: none;
+                opacity: .88;
+            }
+
+            #stores.ready {
+                transition: none;
+            }
+        }
 
     </style>
 </head>
@@ -152,13 +222,34 @@
         <h1 id="title">On t'invite sur Patron</h1>
         <p class="tagline">Note chaque vente et chaque personne qui te doit même sans internet</p>
 
-        <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
-            target="_blank" rel="noopener">Télécharger sur l'App Store</a>
+        <div id="stores">
+            <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
+                target="_blank" rel="noopener">Télécharger sur l'App Store</a>
 
-        <a class="btn btn-play" id="store-play"
-            href="https://play.google.com/store/apps/details?id=com.awall.patron" target="_blank" rel="noopener">
-            Télécharger sur Play Store
-        </a>
+            <a class="btn btn-play" id="store-play"
+                href="https://play.google.com/store/apps/details?id=com.awall.patron" target="_blank" rel="noopener">
+                Télécharger sur Play Store
+            </a>
+        </div>
+        <script>
+            // L'ordre des magasins suit le téléphone de la visiteuse,
+            // décidé avant que les boutons n'apparaissent. Les deux
+            // boutons restent toujours là, pleine taille : la détection
+            // ne choisit que l'ordre. Un « Macintosh » tactile = un iPad.
+            (function () {
+                var ua = navigator.userAgent || '';
+                var w = document.getElementById('stores');
+                if (!w) return;
+                var isIOS = /iPhone|iPad|iPod/i.test(ua)
+                    || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 0);
+                if (isIOS) {
+                    w.insertBefore(document.getElementById('store-ios'), document.getElementById('store-play'));
+                }
+                w.classList.add('ready');
+            })();
+        </script>
+
+        <div class="proof"><strong><span id="shop-count" class="num">130</span> commerces</strong> déjà sur Patron</div>
 
         <div class="foot">Gratuit et fait pour les vendeurs</div>
     </div>
@@ -240,6 +331,37 @@
                     })
                     .catch(function () { setTitle(''); });
             }
+        })();
+    </script>
+    <script>
+        // Le rouleau des chiffres : chaque chiffre défile dans sa
+        // fenêtre et s'arrête sur le nombre vrai. Sans JavaScript ou
+        // en mouvement réduit, le nombre reste écrit, immobile.
+        (function () {
+            'use strict';
+            var el = document.getElementById('shop-count');
+            if (!el) return;
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) return;
+            var digits = el.textContent.trim().split('');
+            el.textContent = '';
+            digits.forEach(function (d, i) {
+                var reel = document.createElement('span');
+                reel.className = 'reel';
+                var strip = document.createElement('span');
+                strip.className = 'strip';
+                for (var n = 0; n <= 9; n++) {
+                    var c = document.createElement('span');
+                    c.textContent = n;
+                    strip.appendChild(c);
+                }
+                var last = document.createElement('span');
+                last.textContent = d;
+                strip.appendChild(last);
+                reel.appendChild(strip);
+                el.appendChild(reel);
+                setTimeout(function () { strip.style.transform = 'translateY(-10em)'; }, 1000 + i * 70);
+            });
         })();
     </script>
 </body>
