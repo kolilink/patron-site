@@ -5,15 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-    <title>On t'invite sur Patron</title>
-    <meta name="description" content="Note chaque vente et chaque personne qui te doit même sans internet" />
+    <title>Patron</title>
 
     <!-- Open Graph / Twitter — the WhatsApp preview card. Static on purpose:
        this page is served by static GitHub Pages, so og:title is the generic
        invitation title (the inviter's name is rendered client-side for humans,
        not for crawlers — WhatsApp's crawler does not run JS). -->
-    <meta property="og:title" content="On t'invite sur Patron" />
-    <meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet" />
+    <meta property="og:title" content="Patron" />
+    <meta property="og:description" content="" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://patron.kolilink.com/invite" />
     <meta property="og:image" content="https://patron.kolilink.com/invite/og.png" />
@@ -248,9 +247,9 @@
 
 <body>
     <div class="card">
-        <h1 id="title">On t'invite sur Patron</h1>
-        <p class="lede">Ton carnet, dans ton téléphone</p>
-        <p class="tagline">Note chaque vente et chaque personne qui te doit même sans internet</p>
+        <h1 id="title">Patron</h1>
+        <p class="lede">Ton commerce, dans ta poche.</p>
+        <p class="tagline">Note qui te doit, même sans internet.</p>
 
         <div id="stores">
             <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
@@ -281,7 +280,7 @@
 
         <div class="proof"><strong><span id="shop-count" class="num">131</span> commerces</strong> déjà sur Patron</div>
 
-        <div class="foot">Gratuit et fait pour les vendeurs</div>
+        <div class="foot">Gratuit.</div>
     </div>
 
     <script>
@@ -344,7 +343,7 @@
             }
 
             function setTitle(name) {
-                var t = name ? name + ' t\u2019invite sur Patron' : "On t'invite sur Patron";
+                var t = name ? name + ' t\u2019invite sur Patron' : "Patron";
                 titleEl.textContent = t;
                 document.title = t;
                 fitTitle();
