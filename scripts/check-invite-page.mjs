@@ -21,21 +21,21 @@ const matches = (label, hay, re) => check(label, re.test(hay));
 
 const html = read('invite/index.html');
 const card = read('scripts/invite-og-card.html');
-const DESC = 'Note chaque vente et chaque personne qui te doit même sans internet';
 
 // Les textes exacts de la page.
-contains("titre d'invitation", html, "On t'invite sur Patron");
-contains('promesse', html, 'Note chaque vente et chaque personne qui te doit même sans internet');
-contains('ligne en gras au-dessus de la promesse', html, '<p class="lede">Ton carnet, dans ton téléphone</p>');
+contains('titre sans nom : Patron', html, '<h1 id="title">Patron</h1>');
+contains('titre sans nom (script) : Patron', html, ": \"Patron\";");
+contains('promesse', html, '<p class="tagline">Note qui te doit, même sans internet.</p>');
+contains('ligne en gras au-dessus de la promesse', html, '<p class="lede">Ton commerce, dans ta poche.</p>');
 matches('la ligne en gras est bien au-dessus de la promesse', html, /class="lede">[^<]*<\/p>\s*<p class="tagline"/);
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
-contains('signature', html, 'Gratuit et fait pour les vendeurs');
+contains('signature', html, '<div class="foot">Gratuit.</div>');
 contains('preuve (repli du nombre, vérifié)', html, '<span id="shop-count" class="num">131</span> commerces</strong> déjà sur Patron');
 contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
 matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
-notMatches('aucun point en fin de phrase (Patron.)', html, /Patron\./);
-notMatches('aucun point en fin de phrase (internet.)', html, /internet\./);
+notMatches('anciennes accroches absentes', html, /On t'invite sur Patron|Ton carnet|Note chaque vente|et fait pour les vendeurs/);
+notMatches('pas de meta description (dite une seule fois)', html, /name="description"/);
 notMatches('aucun guillemet autour du nom', html, /\\u00AB ' \+ name/);
 notMatches('aucune icône dans le bouton Play Store', html, /play-icon|<svg/);
 
@@ -56,10 +56,9 @@ notMatches('jamais le presse-papiers', html, /clipboard|execCommand/i);
 // La carte sociale (source de invite/og.png) : les textes exacts, jamais « boutique », plus l'ancienne accroche.
 // Même règle que la page : aucun point en fin de phrase.
 contains('carte : marque', card, '<div class="brand">Patron</div>');
-contains('carte : titre', card, '<div class="tagline">Ton carnet, dans ton téléphone</div>');
-contains('carte : promesse', card, `<div class="sub">${DESC}</div>`);
-contains('carte : pied', card, '<div class="foot">Gratuit et fait pour les vendeurs</div>');
-notMatches('carte : aucun point en fin de phrase (internet.)', card, /internet\./);
+contains('carte : titre', card, '<div class="tagline">Ton commerce, dans ta poche.</div>');
+contains('carte : gratuit', card, '<div class="sub">Gratuit.</div>');
+notMatches('carte : anciennes accroches retirées', card, /Ton carnet|Note chaque vente|et fait pour les vendeurs/);
 notMatches('carte : ancienne accroche retirée', card, /Plus de page perdue/);
 notMatches('carte : jamais « boutique » (toute vendeuse n\u2019a pas de boutique)', card, /boutique/i);
 notMatches('carte : aucun tiret cadratin après « doit »', card.replace(/<title>.*?<\/title>/s, ''), /doit\s*—|—/);
@@ -73,7 +72,8 @@ notMatches('carte : aucun tiret cadratin après « doit »', card.replace(/<titl
 // La carte sociale, sur la page et sur le 404.
 for (const f of ['invite/index.html', '404.html']) {
   const h = read(f);
-  contains(`${f} : og:description`, h, '<meta property="og:description" content="Note chaque vente et chaque personne qui te doit même sans internet" />');
+  contains(`${f} : og:title`, h, '<meta property="og:title" content="Patron" />');
+  contains(`${f} : og:description vide`, h, '<meta property="og:description" content="" />');
   contains(`${f} : og:image`, h, '<meta property="og:image" content="https://patron.kolilink.com/invite/og.png" />');
 }
 matches('404.html redirige vers /invite?i=', read('404.html'), /\/invite\?i=/);
