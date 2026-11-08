@@ -2,514 +2,358 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Patron — Politique de confidentialité</title>
+  <meta name="description" content="Ce que Patron garde, pourquoi, et ce que nous ne ferons jamais.">
+  <meta name="theme-color" content="#0B0B0F" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FBFBFC" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="/assets/favicon-64.png">
+  <link rel="apple-touch-icon" href="/assets/patron-icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
   <style>
+    /* One left-aligned reading column, a calm hero, six promises that come
+       into focus one at a time, then the full text in quiet accordions. */
     :root {
-      --bg: #FFFFFF;
-      --primary: #18181B;
-      --secondary: #52525B;
-      --accent: #5B5BF2;
-      --card-border: #E7E7EA;
-      --card-bg: #FAFAFA;
+      --bg: #0B0B0F; --surface: #131318; --line: rgba(255,255,255,.08);
+      --fg: #F4F4F6; --fg-2: #A3A3AD; --fg-3: #6B6B76;
+      --accent: #9C96FF;
+      --sans: "Geist", ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      --ease: cubic-bezier(.2,.7,.1,1);
+      --gutter: max(20px, env(safe-area-inset-left, 0px));
+      color-scheme: dark;
     }
-
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #09090B;
-        --primary: #FFFFFF;
-        --secondary: #A8A8B3;
-        --accent: #8B8BFF;
-        --card-border: #26262B;
-        --card-bg: #101013;
+        --bg: #FBFBFC; --surface: #F3F3F6; --line: rgba(10,10,30,.09);
+        --fg: #0E0E14; --fg-2: #55556A; --fg-3: #8C8C9C;
+        --accent: #4A40D9; color-scheme: light;
       }
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--primary);
-      font-size: 17px;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      padding: 96px 24px 64px;
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: var(--sans); font-size: 17px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      padding-left: var(--gutter);
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .col { max-width: 620px; margin: 0 auto; }
+    a { color: var(--accent); text-decoration: none; }
+    a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
-    .container {
-      max-width: 920px;
-      margin: 0 auto;
-    }
+    /* Reading progress */
+    .progress { position: fixed; left: 0; right: 0; top: 0; height: 2px; z-index: 20; pointer-events: none; }
+    .progress i { display: block; height: 100%; background: var(--accent); opacity: .7; transform-origin: 0 50%; transform: scaleX(0); }
 
-    main {
-      max-width: 640px;
-      margin: 0 auto;
+    /* Header */
+    header.bar {
+      position: sticky; top: 0; z-index: 15;
+      margin: 0 calc(-1 * var(--gutter));
+      padding: calc(12px + env(safe-area-inset-top, 0px)) var(--gutter) 12px;
+      background: var(--bg);
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      -webkit-backdrop-filter: saturate(1.4) blur(18px); backdrop-filter: saturate(1.4) blur(18px);
+      border-bottom: 1px solid transparent; transition: border-color .4s var(--ease);
     }
+    header.bar.scrolled { border-bottom-color: var(--line); }
+    .bar .col { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--fg); font-weight: 600; font-size: 16px; letter-spacing: -.01em; }
+    .brand img { width: 26px; height: 26px; border-radius: 7px; display: block; }
+    .tabs { display: flex; gap: 2px; padding: 3px; background: var(--surface); border-radius: 999px; font-size: 13px; }
+    .tabs a { padding: 6px 12px; border-radius: 999px; color: var(--fg-2); transition: color .3s, background .3s; }
+    .tabs a[aria-current="page"] { background: var(--bg); color: var(--fg); }
 
     /* Hero */
-    .hero {
-      text-align: center;
-      margin-bottom: 72px;
-    }
+    .hero { padding-block: clamp(72px, 16vh, 140px) 56px; }
+    .eyebrow, .sec-label { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); margin: 0; }
+    h1 { font-weight: 600; font-size: clamp(44px, 11.5vw, 76px); line-height: 1; letter-spacing: -.045em; margin: 22px 0 0; text-wrap: balance; }
+    h1 .ln { display: block; overflow: hidden; padding-bottom: .08em; }
+    h1 .ln > span { display: inline-block; }
+    .lede { font-size: clamp(19px, 4.6vw, 22px); line-height: 1.45; color: var(--fg-2); margin: 28px 0 0; max-width: 30ch; letter-spacing: -.01em; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font-family: var(--mono); font-size: 12.5px; color: var(--fg-3); }
+    .meta b { font-weight: 500; color: var(--fg-2); }
 
-    .kicker {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
+    /* Load sequence (only when JS runs) */
+    .js .rise { transform: translateY(105%); }
+    .js .fade { opacity: 0; transform: translateY(10px); }
+    .ready .rise { transform: none; transition: transform 1.1s var(--ease); }
+    .ready .fade { opacity: 1; transform: none; transition: opacity 1s var(--ease), transform 1s var(--ease); }
+    .ready .d1 { transition-delay: .08s; } .ready .d2 { transition-delay: .16s; }
+    .ready .d3 { transition-delay: .45s; } .ready .d4 { transition-delay: .6s; }
 
-    .hero h1 {
-      font-size: clamp(30px, 5.4vw, 46px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.025em;
-      margin-bottom: 16px;
-      text-wrap: balance;
-    }
-
-    .hero .subtitle {
-      font-size: clamp(17px, 2.4vw, 20px);
-      color: var(--secondary);
-      margin-bottom: 24px;
-      text-wrap: balance;
-    }
-
-    .hero .date {
-      font-size: 13px;
-      color: var(--secondary);
-      margin-bottom: 28px;
-    }
-
-    .scroll-link {
-      display: inline-block;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    /* Promise cards */
+    /* Promises */
+    section.promises { padding-block: 40px 24px; border-top: 1px solid var(--line); }
+    .sec-label { margin-bottom: 8px; }
     .promise {
-      margin-bottom: 96px;
-      scroll-margin-top: 32px;
+      padding-block: 44px; border-bottom: 1px solid var(--line); display: grid; gap: 14px;
+      transition: opacity .7s var(--ease), filter .7s var(--ease), transform .7s var(--ease);
     }
+    .promise:last-child { border-bottom: 0; }
+    .js .promise { opacity: .28; filter: blur(1.5px); transform: translateY(6px); }
+    .js .promise.on { opacity: 1; filter: none; transform: none; }
+    .promise h2 { font-weight: 600; font-size: clamp(28px, 7vw, 40px); line-height: 1.08; letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+    .promise p { margin: 0; color: var(--fg-2); max-width: 46ch; }
+    .fact { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .fact span { font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .fact .no { color: var(--fg-3); text-decoration: line-through; text-decoration-color: var(--fg-3); }
 
-    .promise h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 24px;
-    }
+    /* Details */
+    section.details { padding-block: 72px 32px; }
+    section.details h2 { font-weight: 600; font-size: 26px; letter-spacing: -.03em; margin: 0 0 6px; }
+    section.details .intro { color: var(--fg-2); margin: 0 0 28px; }
+    details { border-top: 1px solid var(--line); }
+    details:last-of-type { border-bottom: 1px solid var(--line); }
+    summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-weight: 500; letter-spacing: -.01em; font-size: 17px; }
+    summary::-webkit-details-marker { display: none; }
+    summary .pm { flex: none; width: 22px; height: 22px; position: relative; }
+    summary .pm::before, summary .pm::after { content: ""; position: absolute; left: 5px; right: 5px; top: 50%; height: 1.5px; background: var(--fg-3); border-radius: 2px; transition: transform .45s var(--ease); }
+    summary .pm::after { transform: rotate(90deg); }
+    details[open] summary .pm::after { transform: rotate(0); }
+    .body { overflow: hidden; }
+    .body-in { padding: 0 0 24px; color: var(--fg-2); font-size: 16px; max-width: 60ch; }
+    .body-in p { margin: 0 0 12px; }
+    .body-in ul { margin: 0 0 12px; padding-left: 18px; }
+    .body-in li { margin: 6px 0; }
+    .body-in strong { color: var(--fg); font-weight: 500; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--card-border);
-      background-color: var(--card-bg);
-      border-radius: 16px;
-      padding: 20px 16px;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-    }
-
-    .card-num {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-
-    .card h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      line-height: 1.35;
-    }
-
-    .card p {
-      font-size: 13.5px;
-      line-height: 1.5;
-      color: var(--secondary);
-    }
-
-    /* Detail sections */
-    .section {
-      margin-bottom: 88px;
-      scroll-margin-top: 32px;
-    }
-
-    .section h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 24px;
-    }
-
-    .section p {
-      margin-bottom: 20px;
-    }
-
-    .section p strong {
-      font-weight: 600;
-    }
-
-    /* Data table */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 16px;
-    }
-
-    .data-table tr {
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    .data-table tr:last-child {
-      border-bottom: none;
-    }
-
-    .data-table td {
-      padding: 14px 0;
-      vertical-align: top;
-    }
-
-    .data-table td:first-child {
-      font-weight: 600;
-      width: 38%;
-      padding-right: 20px;
-    }
-
-    .data-table td:last-child {
-      color: var(--secondary);
-    }
-
-    @media (max-width: 600px) {
-      .data-table tr {
-        display: block;
-        padding: 14px 0;
-      }
-
-      .data-table td {
-        display: block;
-        border: none;
-        padding: 0;
-      }
-
-      .data-table td:first-child {
-        width: auto;
-        margin-bottom: 4px;
-      }
-    }
-
-    /* Negative promises */
-    .never {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 12px;
-    }
-
-    /* Numbered steps */
-    ol.steps {
-      list-style: none;
-      counter-reset: step;
-    }
-
-    ol.steps li {
-      counter-increment: step;
-      position: relative;
-      padding-left: 44px;
-      margin-bottom: 20px;
-      font-size: 16.5px;
-    }
-
-    ol.steps li::before {
-      content: counter(step);
-      position: absolute;
-      left: 0;
-      top: 1px;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1.5px solid var(--accent);
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    ol.steps li strong {
-      font-weight: 600;
-    }
-
-    /* Contact */
-    .contact-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .contact-list li {
-      margin-bottom: 16px;
-      font-size: 16px;
-    }
-
-    .contact-list span {
-      display: inline-block;
-      width: 110px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--secondary);
-      text-transform: uppercase;
-    }
-
-    .contact-list a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    /* Reading progress hairline */
-    .progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--accent);
-      transform: scaleX(0);
-      transform-origin: 0 50%;
-      z-index: 100;
-    }
-
-    /* Calm scroll reveals */
-    .reveal {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                  transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
+    /* Close */
+    footer { padding-block: 72px 96px; }
+    .sign { font-size: clamp(24px, 6vw, 32px); font-weight: 600; letter-spacing: -.03em; line-height: 1.15; margin: 0; text-wrap: balance; }
+    .sign + p { color: var(--fg-2); margin: 14px 0 0; max-width: 40ch; }
+    .contact { margin-top: 20px; display: grid; gap: 6px; font-size: 16px; }
+    .contact span { display: inline-block; width: 92px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-3); }
+    .small { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var(--fg-3); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
     @media (prefers-reduced-motion: reduce) {
-      .reveal {
-        opacity: 1;
-        transform: none;
-        transition: none;
-      }
-      .progress {
-        display: none;
-      }
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      margin-top: 96px;
-    }
-
-    footer p {
-      font-size: 13px;
-      color: var(--secondary);
-      line-height: 1.8;
+      * { transition: none !important; }
+      .js .rise, .js .fade, .js .promise { transform: none !important; opacity: 1 !important; filter: none !important; }
+      .progress { display: none; }
     }
   </style>
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-  <div class="progress" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"><i id="prog"></i></div>
 
-  <div class="container">
-    <header class="hero">
-      <p class="kicker reveal">Politique de confidentialité</p>
-      <h1 class="reveal">Vos données vous appartiennent.</h1>
-      <p class="subtitle reveal">Notre promesse sur vos données, expliquée avec des mots simples.</p>
-      <p class="date reveal">Mise à jour : 28 octobre 2026</p>
-      <a class="scroll-link reveal" href="#promesse">Lire les détails ↓</a>
-    </header>
+  <header class="bar" id="bar">
+    <div class="col">
+      <a class="brand" href="/" aria-label="Patron"><img src="/assets/patron-icon-180.png" alt="" width="26" height="26">Patron</a>
+      <nav class="tabs" aria-label="Documents">
+        <a href="/privacy.html" aria-current="page">Confidentialité</a>
+        <a href="/terms.html">Conditions</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="promise" id="promesse" aria-label="La promesse en 5 points">
-      <h2 class="reveal">La promesse, en 5 points</h2>
-      <div class="cards">
-        <a class="card reveal" href="#gardons">
-          <span class="card-num">01</span>
-          <h3>Ce que nous gardons</h3>
-          <p>Votre numéro, votre nom, et les infos de votre boutique. Rien d'autre.</p>
-        </a>
-        <a class="card reveal" href="#jamais">
-          <span class="card-num">02</span>
-          <h3>Ce que nous ne faisons jamais</h3>
-          <p>Pas de publicité. Pas de revente. Pas de surprise.</p>
-        </a>
-        <a class="card reveal" href="#alpha">
-          <span class="card-num">03</span>
-          <h3>Alpha et vos données</h3>
-          <p>Vos chiffres servent uniquement à vous répondre.</p>
-        </a>
-        <a class="card reveal" href="#hors-ligne">
-          <span class="card-num">04</span>
-          <h3>Sans internet</h3>
-          <p>Vos données restent protégées dans votre téléphone.</p>
-        </a>
-        <a class="card reveal" href="#droits">
-          <span class="card-num">05</span>
-          <h3>Vos droits</h3>
-          <p>Voir, changer, effacer — quand vous voulez.</p>
-        </a>
+  <main class="col">
+    <section class="hero">
+      <p class="eyebrow fade">Politique de confidentialité</p>
+      <h1>
+        <span class="ln"><span class="rise d1">Vos données</span></span>
+        <span class="ln"><span class="rise d2">vous appartiennent.</span></span>
+      </h1>
+      <p class="lede fade d3">Ce que Patron garde, pourquoi, et ce que nous ne ferons jamais. En six phrases d'abord, puis en détail.</p>
+      <div class="meta fade d4">
+        <span>Mise à jour <b>8 nov. 2026</b></span>
+        <span>Lecture <b>3 min</b></span>
       </div>
     </section>
 
-    <main>
-      <section class="section reveal" id="gardons">
-        <h2>Ce que nous gardons, et pourquoi</h2>
-        <table class="data-table">
-          <tr>
-            <td>Votre numéro de téléphone</td>
-            <td>Pour vous envoyer un code de connexion par WhatsApp.</td>
-          </tr>
-          <tr>
-            <td>Votre nom</td>
-            <td>Le nom que vous voulez afficher dans l'application.</td>
-          </tr>
-          <tr>
-            <td>Votre adresse email (en option)</td>
-            <td>Si vous perdez votre numéro de téléphone ou si vous changez d'appareil, cet email vous permettra de vous reconnecter et de récupérer votre compte facilement.</td>
-          </tr>
-          <tr>
-            <td>Les infos de votre boutique</td>
-            <td>Vos produits, vos ventes, vos dépenses, vos clients et votre équipe. Nous gardons ces informations pour que vous puissiez les retrouver sur tous vos téléphones en même temps.</td>
-          </tr>
-        </table>
-      </section>
+    <section class="promises" aria-label="La promesse">
+      <p class="sec-label">La promesse</p>
 
-      <section class="section reveal" id="ou-sont-vos-donnees">
-        <h2>Où sont vos données ?</h2>
-        <p>Vos données sont d'abord dans votre téléphone. Quand votre téléphone retrouve internet, une copie est synchronisée dans notre base de données, pour que vous puissiez les retrouver sur tous vos téléphones en même temps.</p>
-        <p>Cette base de données est hébergée par Supabase, sur Amazon Web Services, <strong>aux États-Unis, région Ouest des États-Unis 1 (Californie du Nord)</strong>. Elle n'est pas hébergée en Guinée.</p>
-        <p>Seule Patron utilise cette base de données pour faire fonctionner votre carnet. Vos chiffres ne sont ni vendus, ni utilisés pour de la publicité. Quand vous supprimez votre compte, vos données sont aussi effacées de cette base de données.</p>
-        <p><strong>Si vous perdez votre téléphone :</strong> nous ne pouvons retrouver que ce qui a déjà été reçu par notre serveur. Ce que vous avez écrit sans internet et qui n'a pas encore été synchronisé ne peut pas être récupéré.</p>
-      </section>
+      <article class="promise">
+        <h2>Nous gardons le strict nécessaire.</h2>
+        <p>Votre numéro pour vous connecter, votre nom, et ce que vous notez dans votre boutique. Rien d'autre.</p>
+        <div class="fact"><span>Numéro</span><span>Nom</span><span>Ventes</span><span>Crédits</span><span>Fournisseurs</span></div>
+      </article>
 
-      <section class="section" id="jamais">
-        <h2 class="reveal">Ce que nous ne ferons jamais</h2>
-        <p class="never reveal">Pas de publicité.</p>
-        <p class="never reveal">Pas de revente de vos données.</p>
-        <p class="never reveal">Pas de mauvaise surprise.</p>
-      </section>
+      <article class="promise">
+        <h2>Pas de publicité. Pas de revente.</h2>
+        <p>Vos chiffres ne sont pas un produit. Personne n'achète ce que vous vendez, ni à qui.</p>
+        <div class="fact"><span class="no">Publicité</span><span class="no">Revente</span><span class="no">Profilage</span></div>
+      </article>
 
-      <section class="section reveal" id="alpha">
-        <h2>Alpha, notre assistant intelligent</h2>
-        <ol class="steps">
-          <li>Quand vous posez une question à Alpha, nous utilisons les chiffres de votre commerce (ventes, stock, dépenses) <strong>uniquement pour vous répondre</strong>.</li>
-          <li><strong>Jamais</strong> pour la publicité.</li>
-          <li><strong>Jamais</strong> revendus.</li>
-        </ol>
-      </section>
+      <article class="promise">
+        <h2>Nous pourrions voir. Nous ne regardons pas.</h2>
+        <p>Vos données sont gardées sur nos serveurs, pour que vous ne perdiez rien si votre téléphone se casse ou se perd. Nous y avons donc accès, comme votre banque a accès à votre compte. Nous ne l'ouvrons que pour une raison précise :</p>
+        <div class="fact"><span>Vous demandez de l'aide</span><span>Un bug à réparer</span></div>
+        <p>Le reste du temps, nous comptons, nous ne lisons pas : combien de boutiques utilisent Patron, pas ce que vend la vôtre.</p>
+      </article>
 
-      <section class="section reveal" id="hors-ligne">
-        <h2>Marche sans internet</h2>
-        <p>Patron marche très bien même quand vous n'avez pas internet. Tout ce que vous écrivez (vos ventes, vos stocks, vos calculs) reste caché et protégé dans votre téléphone.</p>
-        <p>Dès que votre téléphone retrouve internet, l'application remet tout à jour toute seule. Vos données ne quittent jamais votre téléphone sans être totalement protégées.</p>
-      </section>
+      <article class="promise">
+        <h2>Fermé à clé sur votre téléphone.</h2>
+        <p>Ce que Patron garde sur votre téléphone est chiffré. Et l'app se verrouille avec votre visage ou votre empreinte quand vous la laissez.</p>
+        <div class="fact"><span>AES-256</span><span>Face ID / empreinte</span></div>
+      </article>
 
-      <section class="section reveal" id="droits">
-        <h2>Vos droits</h2>
-        <ol class="steps">
-          <li><strong>Vous voyez tout :</strong> toutes vos ventes et tout votre argent sont écrits clairement dans l'application. Vous pouvez tout vérifier.</li>
-          <li><strong>Vous changez tout :</strong> vous pouvez changer le nom de votre boutique, vos prix ou vos produits quand vous voulez.</li>
-          <li><strong>Vous effacez tout :</strong> si vous voulez arrêter, vous pouvez supprimer votre compte directement dans l'application (Plus → Paramètres → Supprimer mon compte). Nous effaçons tout, tout de suite et pour toujours, de nos ordinateurs.</li>
-        </ol>
-      </section>
+      <article class="promise">
+        <h2>Votre équipe voit ce que vous décidez.</h2>
+        <p>Seules les personnes que vous invitez entrent dans votre boutique. Chacune voit selon son rôle : un vendeur voit ses ventes, pas votre caisse.</p>
+      </article>
 
-      <section class="section reveal" id="contact">
-        <h2>Nous contacter</h2>
-        <p>Si vous avez une question sur vos informations :</p>
-        <ul class="contact-list">
-          <li><span>WhatsApp</span> <a href="https://wa.me/16094454809">+1 609 445 4809</a></li>
-          <li><span>Email</span> <a href="mailto:support@patron.com">support@patron.com</a></li>
-        </ul>
-      </section>
-    </main>
+      <article class="promise">
+        <h2>Vous pouvez tout effacer.</h2>
+        <p>Dans Paramètres, « Supprimer mon compte ». Vous avez 30 jours pour changer d'avis : il suffit de vous reconnecter.</p>
+        <div class="fact"><span>30 jours</span></div>
+      </article>
+    </section>
 
-    <footer class="reveal">
-      <p>Mise à jour : 28 octobre 2026</p>
-      <p>© 2026 — Patron. Tous droits réservés.</p>
+    <section class="details" id="details">
+      <h2>Les détails</h2>
+      <p class="intro">Le texte complet, pour ceux qui veulent tout lire.</p>
+
+      <details id="collecte">
+        <summary>Ce que nous gardons, et pourquoi<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <ul>
+            <li><strong>Votre numéro de téléphone</strong> : pour vous envoyer un code de connexion par WhatsApp.</li>
+            <li><strong>Votre nom</strong> : le nom que vous voulez afficher dans l'application.</li>
+            <li><strong>Votre adresse email</strong>, si vous la donnez : pour récupérer votre compte si vous perdez votre numéro ou changez de téléphone.</li>
+            <li><strong>Les infos de votre boutique</strong> : produits, ventes, crédits, dépenses, clients, fournisseurs et équipe, pour que vous les retrouviez sur tous vos téléphones.</li>
+            <li><strong>Le fonctionnement de l'app</strong> : modèle de téléphone et rapports d'erreur, pour corriger les bugs.</li>
+          </ul>
+          <p>Nous ne les utilisons jamais pour vous montrer de la publicité.</p>
+        </div></div>
+      </details>
+
+      <details id="stockage">
+        <summary>Où sont vos données<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Vos données sont d'abord dans votre téléphone. Quand il retrouve internet, une copie est envoyée dans notre base de données, pour que vous les retrouviez sur tous vos téléphones.</p>
+          <p>Cette base de données est hébergée par Supabase, sur Amazon Web Services, <strong>aux États-Unis (région Ouest des États-Unis 1, Californie du Nord)</strong>.</p>
+          <p>Quand vous supprimez votre compte, vos données sont aussi effacées de cette base de données.</p>
+        </div></div>
+      </details>
+
+      <details id="acces">
+        <summary>Qui chez Patron peut voir vos données<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Vos données sont stockées sur nos serveurs. L'équipe Patron peut donc techniquement y accéder. Nous le faisons seulement :</p>
+          <ul>
+            <li><strong>quand vous nous demandez de l'aide</strong>, pour regarder le problème avec vous ;</li>
+            <li><strong>pour réparer un bug</strong> qui touche votre boutique.</li>
+          </ul>
+          <p>Pour suivre la santé de Patron, nous regardons des totaux (nombre de boutiques, nombre de ventes enregistrées), jamais le détail d'une boutique.</p>
+        </div></div>
+      </details>
+
+      <details id="code">
+        <summary>Votre code de connexion<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Nous envoyons votre code par WhatsApp. WhatsApp reçoit donc votre numéro pour livrer le message. Nous n'utilisons jamais le SMS.</p>
+        </div></div>
+      </details>
+
+      <details id="alpha">
+        <summary>Alpha, l'assistant<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Quand vous posez une question à Alpha, nous utilisons les chiffres de votre boutique (ventes, stock, dépenses) <strong>uniquement pour vous répondre</strong>. Jamais pour la publicité, jamais revendus.</p>
+        </div></div>
+      </details>
+
+      <details id="hors-ligne">
+        <summary>Sans internet<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Patron marche sans internet. Ce que vous écrivez reste chiffré dans votre téléphone, et l'app remet tout à jour dès que la connexion revient.</p>
+          <p><strong>Si vous perdez votre téléphone</strong>, nous ne pouvons retrouver que ce qui a déjà été envoyé à notre serveur. Ce qui a été écrit sans internet et pas encore envoyé ne peut pas être récupéré.</p>
+        </div></div>
+      </details>
+
+      <details id="suppression">
+        <summary>Supprimer votre compte<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Dans l'app : Plus → Paramètres → Supprimer mon compte. Votre compte est effacé définitivement après 30 jours. Si vous vous reconnectez avant, la suppression est annulée.</p>
+          <p>Si une autre boutique doit garder une vente que vous avez faite pour elle, votre nom y est remplacé par « Compte supprimé ».</p>
+        </div></div>
+      </details>
+
+      <details id="droits">
+        <summary>Vos droits<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <ul>
+            <li><strong>Voir</strong> : toutes vos ventes et tout votre argent sont dans l'application.</li>
+            <li><strong>Changer</strong> : le nom de votre boutique, vos prix, vos produits, quand vous voulez.</li>
+            <li><strong>Effacer</strong> : supprimez votre compte depuis l'application.</li>
+          </ul>
+          <p>Pour une demande que l'app ne permet pas encore, écrivez-nous.</p>
+        </div></div>
+      </details>
+    </section>
+
+    <footer id="contact">
+      <p class="sign">Une question ? Une personne vous répond.</p>
+      <p>Écrivez-nous depuis l'app, dans Aide, ou ici :</p>
+      <div class="contact">
+        <div><span>WhatsApp</span><a href="https://wa.me/16094454809">+1 609 445 4809</a></div>
+        <div><span>Email</span><a href="mailto:support@patron.com">support@patron.com</a></div>
+      </div>
+      <div class="small"><span>© 2026 Patron</span><span>Mise à jour : 8 novembre 2026</span></div>
     </footer>
-  </div>
+  </main>
 
   <script>
-    (function () {
-      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  (function () {
+    var root = document.documentElement;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.add('ready'); }); });
 
-      // Fine reading-progress hairline
-      var bar = document.querySelector('.progress');
-      var ticking = false;
-      function updateBar() {
-        var el = document.documentElement;
-        var max = el.scrollHeight - el.clientHeight;
-        var p = max > 0 ? (window.scrollY || el.scrollTop) / max : 0;
-        bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, p)) + ')';
-        ticking = false;
-      }
-      window.addEventListener('scroll', function () {
-        if (!ticking) { window.requestAnimationFrame(updateBar); ticking = true; }
-      }, { passive: true });
-      updateBar();
+    // Header hairline + reading progress
+    var bar = document.getElementById('bar'), prog = document.getElementById('prog'), ticking = false;
+    function update() {
+      var y = window.scrollY, h = root.scrollHeight - innerHeight;
+      bar.classList.toggle('scrolled', y > 8);
+      prog.style.transform = 'scaleX(' + (h > 0 ? Math.min(1, y / h) : 0) + ')';
+      ticking = false;
+    }
+    addEventListener('scroll', function () { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
+    update();
 
-      // Gentle stagger inside groups
-      function stagger(selector, stepMs) {
-        var items = document.querySelectorAll(selector);
-        for (var i = 0; i < items.length; i++) {
-          items[i].style.transitionDelay = (i * stepMs) + 'ms';
+    // Promises come into focus one at a time
+    var items = [].slice.call(document.querySelectorAll('.promise'));
+    function showAll() { items.forEach(function (e) { e.classList.add('on'); }); }
+    if (reduce || !('IntersectionObserver' in window)) { showAll(); }
+    else {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('on'); });
+      }, { rootMargin: '-30% 0px -30% 0px' });
+      items.forEach(function (e) { io.observe(e); });
+      setTimeout(function () {
+        items.forEach(function (e) { if (e.getBoundingClientRect().top < innerHeight * .85) e.classList.add('on'); });
+      }, 500);
+    }
+
+    // Open a section directly from a link (e.g. /privacy.html#suppression)
+    function openFromHash() {
+      var d = location.hash && document.getElementById(location.hash.slice(1));
+      if (d && d.tagName === 'DETAILS') { d.open = true; d.scrollIntoView({ block: 'start' }); }
+    }
+    addEventListener('hashchange', openFromHash); openFromHash();
+
+    // Smooth open and close
+    if (reduce || !Element.prototype.animate) return;
+    [].forEach.call(document.querySelectorAll('details'), function (d) {
+      var s = d.querySelector('summary'), b = d.querySelector('.body'), busy = false;
+      s.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (busy) return; busy = true;
+        if (d.open) {
+          b.animate([{ height: b.scrollHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+            { duration: 380, easing: 'cubic-bezier(.2,.7,.1,1)' }).onfinish = function () { d.open = false; busy = false; };
+        } else {
+          d.open = true;
+          b.animate([{ height: '0px', opacity: 0 }, { height: b.scrollHeight + 'px', opacity: 1 }],
+            { duration: 480, easing: 'cubic-bezier(.2,.7,.1,1)' }).onfinish = function () { busy = false; };
         }
-      }
-      stagger('.hero .reveal', 90);
-      stagger('.cards .card', 80);
-      stagger('#jamais .reveal', 130);
-
-      // Reveal on scroll
-      var revealEls = document.querySelectorAll('.reveal');
-      if (reduceMotion || !('IntersectionObserver' in window)) {
-        for (var j = 0; j < revealEls.length; j++) revealEls[j].classList.add('visible');
-        return;
-      }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-      for (var k = 0; k < revealEls.length; k++) io.observe(revealEls[k]);
-    })();
+      });
+    });
+  })();
   </script>
-
 </body>
 </html>
