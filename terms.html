@@ -2,505 +2,335 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Patron — Conditions d'utilisation</title>
+  <meta name="description" content="Les règles d'utilisation de Patron, en mots simples.">
+  <meta name="theme-color" content="#0B0B0F" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FBFBFC" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="/assets/favicon-64.png">
+  <link rel="apple-touch-icon" href="/assets/patron-icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
   <style>
+    /* One left-aligned reading column, a calm hero, six promises that come
+       into focus one at a time, then the full text in quiet accordions. */
     :root {
-      --bg: #FFFFFF;
-      --primary: #18181B;
-      --secondary: #52525B;
-      --accent: #5B5BF2;
-      --card-border: #E7E7EA;
-      --card-bg: #FAFAFA;
+      --bg: #0B0B0F; --surface: #131318; --line: rgba(255,255,255,.08);
+      --fg: #F4F4F6; --fg-2: #A3A3AD; --fg-3: #6B6B76;
+      --accent: #9C96FF;
+      --sans: "Geist", ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      --ease: cubic-bezier(.2,.7,.1,1);
+      --gutter: max(20px, env(safe-area-inset-left, 0px));
+      color-scheme: dark;
     }
-
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #09090B;
-        --primary: #FFFFFF;
-        --secondary: #A8A8B3;
-        --accent: #8B8BFF;
-        --card-border: #26262B;
-        --card-bg: #101013;
+        --bg: #FBFBFC; --surface: #F3F3F6; --line: rgba(10,10,30,.09);
+        --fg: #0E0E14; --fg-2: #55556A; --fg-3: #8C8C9C;
+        --accent: #4A40D9; color-scheme: light;
       }
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--primary);
-      font-size: 17px;
-      line-height: 1.65;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      padding: 96px 24px 64px;
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: var(--sans); font-size: 17px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      padding-left: var(--gutter);
+      padding-right: max(20px, env(safe-area-inset-right, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .col { max-width: 620px; margin: 0 auto; }
+    a { color: var(--accent); text-decoration: none; }
+    a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
-    .container {
-      max-width: 920px;
-      margin: 0 auto;
-    }
+    /* Reading progress */
+    .progress { position: fixed; left: 0; right: 0; top: 0; height: 2px; z-index: 20; pointer-events: none; }
+    .progress i { display: block; height: 100%; background: var(--accent); opacity: .7; transform-origin: 0 50%; transform: scaleX(0); }
 
-    main {
-      max-width: 640px;
-      margin: 0 auto;
+    /* Header */
+    header.bar {
+      position: sticky; top: 0; z-index: 15;
+      margin: 0 calc(-1 * var(--gutter));
+      padding: calc(12px + env(safe-area-inset-top, 0px)) var(--gutter) 12px;
+      background: var(--bg);
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      -webkit-backdrop-filter: saturate(1.4) blur(18px); backdrop-filter: saturate(1.4) blur(18px);
+      border-bottom: 1px solid transparent; transition: border-color .4s var(--ease);
     }
+    header.bar.scrolled { border-bottom-color: var(--line); }
+    .bar .col { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--fg); font-weight: 600; font-size: 16px; letter-spacing: -.01em; }
+    .brand img { width: 26px; height: 26px; border-radius: 7px; display: block; }
+    .tabs { display: flex; gap: 2px; padding: 3px; background: var(--surface); border-radius: 999px; font-size: 13px; }
+    .tabs a { padding: 6px 12px; border-radius: 999px; color: var(--fg-2); transition: color .3s, background .3s; }
+    .tabs a[aria-current="page"] { background: var(--bg); color: var(--fg); }
 
     /* Hero */
-    .hero {
-      text-align: center;
-      margin-bottom: 72px;
-    }
+    .hero { padding-block: clamp(72px, 16vh, 140px) 56px; }
+    .eyebrow, .sec-label { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); margin: 0; }
+    h1 { font-weight: 600; font-size: clamp(44px, 11.5vw, 76px); line-height: 1; letter-spacing: -.045em; margin: 22px 0 0; text-wrap: balance; }
+    h1 .ln { display: block; overflow: hidden; padding-bottom: .08em; }
+    h1 .ln > span { display: inline-block; }
+    .lede { font-size: clamp(19px, 4.6vw, 22px); line-height: 1.45; color: var(--fg-2); margin: 28px 0 0; max-width: 30ch; letter-spacing: -.01em; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font-family: var(--mono); font-size: 12.5px; color: var(--fg-3); }
+    .meta b { font-weight: 500; color: var(--fg-2); }
 
-    .kicker {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 20px;
-    }
+    /* Load sequence (only when JS runs) */
+    .js .rise { transform: translateY(105%); }
+    .js .fade { opacity: 0; transform: translateY(10px); }
+    .ready .rise { transform: none; transition: transform 1.1s var(--ease); }
+    .ready .fade { opacity: 1; transform: none; transition: opacity 1s var(--ease), transform 1s var(--ease); }
+    .ready .d1 { transition-delay: .08s; } .ready .d2 { transition-delay: .16s; }
+    .ready .d3 { transition-delay: .45s; } .ready .d4 { transition-delay: .6s; }
 
-    .hero h1 {
-      font-size: clamp(30px, 5.4vw, 46px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.025em;
-      margin-bottom: 16px;
-      text-wrap: balance;
-    }
-
-    .hero .subtitle {
-      font-size: clamp(17px, 2.4vw, 20px);
-      color: var(--secondary);
-      margin-bottom: 24px;
-      text-wrap: balance;
-    }
-
-    .hero .date {
-      font-size: 13px;
-      color: var(--secondary);
-      margin-bottom: 28px;
-    }
-
-    .scroll-link {
-      display: inline-block;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    /* Promise cards */
+    /* Promises */
+    section.promises { padding-block: 40px 24px; border-top: 1px solid var(--line); }
+    .sec-label { margin-bottom: 8px; }
     .promise {
-      margin-bottom: 96px;
-      scroll-margin-top: 32px;
+      padding-block: 44px; border-bottom: 1px solid var(--line); display: grid; gap: 14px;
+      transition: opacity .7s var(--ease), filter .7s var(--ease), transform .7s var(--ease);
     }
+    .promise:last-child { border-bottom: 0; }
+    .js .promise { opacity: .28; filter: blur(1.5px); transform: translateY(6px); }
+    .js .promise.on { opacity: 1; filter: none; transform: none; }
+    .promise h2 { font-weight: 600; font-size: clamp(28px, 7vw, 40px); line-height: 1.08; letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+    .promise p { margin: 0; color: var(--fg-2); max-width: 46ch; }
+    .fact { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .fact span { font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .fact .no { color: var(--fg-3); text-decoration: line-through; text-decoration-color: var(--fg-3); }
 
-    .promise h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 24px;
-    }
+    /* Details */
+    section.details { padding-block: 72px 32px; }
+    section.details h2 { font-weight: 600; font-size: 26px; letter-spacing: -.03em; margin: 0 0 6px; }
+    section.details .intro { color: var(--fg-2); margin: 0 0 28px; }
+    details { border-top: 1px solid var(--line); }
+    details:last-of-type { border-bottom: 1px solid var(--line); }
+    summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-weight: 500; letter-spacing: -.01em; font-size: 17px; }
+    summary::-webkit-details-marker { display: none; }
+    summary .pm { flex: none; width: 22px; height: 22px; position: relative; }
+    summary .pm::before, summary .pm::after { content: ""; position: absolute; left: 5px; right: 5px; top: 50%; height: 1.5px; background: var(--fg-3); border-radius: 2px; transition: transform .45s var(--ease); }
+    summary .pm::after { transform: rotate(90deg); }
+    details[open] summary .pm::after { transform: rotate(0); }
+    .body { overflow: hidden; }
+    .body-in { padding: 0 0 24px; color: var(--fg-2); font-size: 16px; max-width: 60ch; }
+    .body-in p { margin: 0 0 12px; }
+    .body-in ul { margin: 0 0 12px; padding-left: 18px; }
+    .body-in li { margin: 6px 0; }
+    .body-in strong { color: var(--fg); font-weight: 500; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--card-border);
-      background-color: var(--card-bg);
-      border-radius: 16px;
-      padding: 20px 16px;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-    }
-
-    .card-num {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-
-    .card h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      line-height: 1.35;
-    }
-
-    .card p {
-      font-size: 13.5px;
-      line-height: 1.5;
-      color: var(--secondary);
-    }
-
-    /* Detail sections */
-    .section {
-      margin-bottom: 88px;
-      scroll-margin-top: 32px;
-    }
-
-    .section h2 {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 24px;
-    }
-
-    .section p {
-      margin-bottom: 20px;
-    }
-
-    .section p strong {
-      font-weight: 600;
-    }
-
-    .section a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    /* Definition table */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 16px;
-    }
-
-    .data-table tr {
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    .data-table tr:last-child {
-      border-bottom: none;
-    }
-
-    .data-table td {
-      padding: 14px 0;
-      vertical-align: top;
-    }
-
-    .data-table td:first-child {
-      font-weight: 600;
-      width: 38%;
-      padding-right: 20px;
-    }
-
-    .data-table td:last-child {
-      color: var(--secondary);
-    }
-
-    @media (max-width: 600px) {
-      .data-table tr {
-        display: block;
-        padding: 14px 0;
-      }
-
-      .data-table td {
-        display: block;
-        border: none;
-        padding: 0;
-      }
-
-      .data-table td:first-child {
-        width: auto;
-        margin-bottom: 4px;
-      }
-    }
-
-    /* Standalone lines */
-    .never {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 12px;
-    }
-
-    /* Numbered steps */
-    ol.steps {
-      list-style: none;
-      counter-reset: step;
-    }
-
-    ol.steps li {
-      counter-increment: step;
-      position: relative;
-      padding-left: 44px;
-      margin-bottom: 20px;
-      font-size: 16.5px;
-    }
-
-    ol.steps li::before {
-      content: counter(step);
-      position: absolute;
-      left: 0;
-      top: 1px;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1.5px solid var(--accent);
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    ol.steps li strong {
-      font-weight: 600;
-    }
-
-    /* Contact */
-    .contact-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .contact-list li {
-      margin-bottom: 16px;
-      font-size: 16px;
-    }
-
-    .contact-list span {
-      display: inline-block;
-      width: 110px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--secondary);
-      text-transform: uppercase;
-    }
-
-    .contact-list a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    /* Reading progress hairline */
-    .progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--accent);
-      transform: scaleX(0);
-      transform-origin: 0 50%;
-      z-index: 100;
-    }
-
-    /* Calm scroll reveals */
-    .reveal {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-                  transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
+    /* Close */
+    footer { padding-block: 72px 96px; }
+    .sign { font-size: clamp(24px, 6vw, 32px); font-weight: 600; letter-spacing: -.03em; line-height: 1.15; margin: 0; text-wrap: balance; }
+    .sign + p { color: var(--fg-2); margin: 14px 0 0; max-width: 40ch; }
+    .contact { margin-top: 20px; display: grid; gap: 6px; font-size: 16px; }
+    .contact span { display: inline-block; width: 92px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-3); }
+    .small { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var(--fg-3); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
     @media (prefers-reduced-motion: reduce) {
-      .reveal {
-        opacity: 1;
-        transform: none;
-        transition: none;
-      }
-      .progress {
-        display: none;
-      }
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      margin-top: 96px;
-    }
-
-    footer p {
-      font-size: 13px;
-      color: var(--secondary);
-      line-height: 1.8;
+      * { transition: none !important; }
+      .js .rise, .js .fade, .js .promise { transform: none !important; opacity: 1 !important; filter: none !important; }
+      .progress { display: none; }
     }
   </style>
+  <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
-  <div class="progress" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"><i id="prog"></i></div>
 
-  <div class="container">
-    <header class="hero">
-      <p class="kicker reveal">Conditions d'utilisation</p>
-      <h1 class="reveal">Les règles sont simples. Comme Patron.</h1>
-      <p class="subtitle reveal">Notre mission est de vous faire gagner du temps — ces règles protègent votre commerce et le nôtre, expliquées avec des mots simples.</p>
-      <p class="date reveal">Mise à jour : 2 octobre 2026</p>
-      <a class="scroll-link reveal" href="#essentiel">Lire les détails ↓</a>
-    </header>
+  <header class="bar" id="bar">
+    <div class="col">
+      <a class="brand" href="/" aria-label="Patron"><img src="/assets/patron-icon-180.png" alt="" width="26" height="26">Patron</a>
+      <nav class="tabs" aria-label="Documents">
+        <a href="/privacy.html">Confidentialité</a>
+        <a href="/terms.html" aria-current="page">Conditions</a>
+      </nav>
+    </div>
+  </header>
 
-    <section class="promise" id="essentiel" aria-label="L'essentiel en 5 points">
-      <h2 class="reveal">L'essentiel, en 5 points</h2>
-      <div class="cards">
-        <a class="card reveal" href="#compte">
-          <span class="card-num">01</span>
-          <h3>Votre compte</h3>
-          <p>Un compte, un numéro. C'est vous qui le gardez en sécurité.</p>
-        </a>
-        <a class="card reveal" href="#alpha">
-          <span class="card-num">02</span>
-          <h3>Alpha</h3>
-          <p>L'assistant qui répond à vos questions sur votre commerce, gratuitement.</p>
-        </a>
-        <a class="card reveal" href="#interdit">
-          <span class="card-num">03</span>
-          <h3>Ce qui est interdit</h3>
-          <p>Pas d'activité illégale, pas d'accès aux autres commerces, pas de copie.</p>
-        </a>
-        <a class="card reveal" href="#responsabilite">
-          <span class="card-num">04</span>
-          <h3>Vos décisions</h3>
-          <p>Vos prix, votre stock : vos décisions restent les vôtres.</p>
-        </a>
-        <a class="card reveal" href="#fin">
-          <span class="card-num">05</span>
-          <h3>Partir quand vous voulez</h3>
-          <p>Supprimez votre compte dans l'application, à tout moment.</p>
-        </a>
+  <main class="col">
+    <section class="hero">
+      <p class="eyebrow fade">Conditions d'utilisation</p>
+      <h1>
+        <span class="ln"><span class="rise d1">Les règles sont</span></span>
+        <span class="ln"><span class="rise d2">simples.</span></span>
+      </h1>
+      <p class="lede fade d3">Comme Patron. Ces règles protègent votre commerce et le nôtre, en mots simples.</p>
+      <div class="meta fade d4">
+        <span>Mise à jour <b>8 nov. 2026</b></span>
+        <span>Lecture <b>2 min</b></span>
       </div>
     </section>
 
-    <main>
-      <section class="section reveal" id="utilisation">
-        <h2>En utilisant Patron</h2>
-        <p>En créant un compte ou en utilisant l'application Patron, vous acceptez ces conditions. Si vous n'êtes pas d'accord, vous ne pouvez pas utiliser l'application.</p>
-        <p>Patron est une application de gestion commerciale : ventes, stock, dépenses, clients et équipe, pour les petits commerces.</p>
-      </section>
+    <section class="promises" aria-label="L'essentiel">
+      <p class="sec-label">L'essentiel</p>
 
-      <section class="section reveal" id="compte">
-        <h2>Votre compte</h2>
-        <ol class="steps">
-          <li><strong>Un compte, un numéro :</strong> vous vous connectez avec votre numéro de téléphone (code envoyé par WhatsApp).</li>
-          <li><strong>Vous êtes responsable</strong> de garder l'accès à votre téléphone et à votre compte en sécurité.</li>
-          <li><strong>Vos informations</strong> doivent être exactes.</li>
-          <li>Ce que nous gardons est expliqué dans notre <a href="privacy.html">Politique de confidentialité</a>.</li>
-        </ol>
-      </section>
+      <article class="promise">
+        <h2>Un compte, un numéro.</h2>
+        <p>Vous vous connectez avec votre numéro. C'est vous qui gardez l'accès à votre téléphone et à votre compte en sécurité.</p>
+        <div class="fact"><span>Code par WhatsApp</span></div>
+      </article>
 
-      <section class="section reveal" id="alpha">
-        <h2>Alpha, notre assistant</h2>
-        <p>Alpha est l'assistant qui répond à vos questions sur votre commerce. Il est gratuit.</p>
-      </section>
+      <article class="promise">
+        <h2>Alpha répond, gratuitement.</h2>
+        <p>L'assistant qui répond à vos questions sur votre commerce. Il ne coûte rien.</p>
+        <div class="fact"><span>Gratuit</span></div>
+      </article>
 
-      <section class="section" id="interdit">
-        <h2 class="reveal">Ce que vous ne pouvez pas faire</h2>
-        <p class="never reveal">Utiliser Patron pour une activité illégale.</p>
-        <p class="never reveal">Essayer d'accéder aux données d'un autre commerce sans autorisation.</p>
-        <p class="never reveal">Copier, revendre ou modifier l'application elle-même.</p>
-      </section>
+      <article class="promise">
+        <h2>Ce qui est interdit est court.</h2>
+        <p>Pas d'activité illégale, pas d'accès aux données d'un autre commerce, pas de copie de l'application.</p>
+        <div class="fact"><span class="no">Activité illégale</span><span class="no">Autres commerces</span><span class="no">Copie</span></div>
+      </article>
 
-      <section class="section reveal" id="responsabilite">
-        <h2>Responsabilité</h2>
-        <p>Patron est un outil de gestion. Les décisions commerciales (prix, stock, conseils d'Alpha) restent de votre responsabilité.</p>
-        <p>Nous faisons de notre mieux pour que l'application soit fiable, mais nous ne pouvons pas garantir qu'elle sera toujours sans erreur ou disponible sans interruption.</p>
-      </section>
+      <article class="promise">
+        <h2>Vos décisions restent les vôtres.</h2>
+        <p>Vos prix, votre stock, vos choix. Patron vous aide à voir clair, c'est vous qui décidez.</p>
+      </article>
 
-      <section class="section reveal" id="fin">
-        <h2>Suspension et suppression</h2>
-        <p>Vous pouvez supprimer votre compte à tout moment dans l'application (Plus → Paramètres → Supprimer mon compte).</p>
-        <p>Nous pouvons suspendre ou fermer un compte en cas de fraude, d'abus ou de non-respect de ces conditions.</p>
-      </section>
+      <article class="promise">
+        <h2>Partez quand vous voulez.</h2>
+        <p>Supprimez votre compte dans l'application, à tout moment.</p>
+        <div class="fact"><span>Plus → Paramètres</span></div>
+      </article>
+    </section>
 
-      <section class="section reveal" id="changements">
-        <h2>Changements</h2>
-        <p>Nous pouvons modifier ces conditions. En cas de changement important, nous vous informerons dans l'application.</p>
-        <p>Continuer à utiliser Patron après un changement veut dire que vous acceptez les nouvelles conditions.</p>
-      </section>
+    <section class="details" id="details">
+      <h2>Les détails</h2>
+      <p class="intro">Le texte complet, pour ceux qui veulent tout lire.</p>
 
-      <section class="section reveal" id="contact">
-        <h2>Nous contacter</h2>
-        <p>Pour toute question sur ces conditions :</p>
-        <ul class="contact-list">
-          <li><span>WhatsApp</span> <a href="https://wa.me/16094454809">+1 609 445 4809</a></li>
-          <li><span>Email</span> <a href="mailto:support@patron.com">support@patron.com</a></li>
-        </ul>
-      </section>
-    </main>
+      <details id="utilisation">
+        <summary>En utilisant Patron<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>En créant un compte ou en utilisant l'application Patron, vous acceptez ces conditions. Si vous n'êtes pas d'accord, vous ne pouvez pas utiliser l'application.</p>
+          <p>Patron est une application de gestion commerciale : ventes, stock, dépenses, clients et équipe, pour les petits commerces.</p>
+        </div></div>
+      </details>
 
-    <footer class="reveal">
-      <p>Mise à jour : 2 octobre 2026</p>
-      <p>© 2026 — Patron. Tous droits réservés.</p>
+      <details id="compte">
+        <summary>Votre compte<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <ul>
+            <li>Un compte, un numéro : vous vous connectez avec votre numéro de téléphone (code envoyé par WhatsApp).</li>
+            <li>Vous êtes responsable de garder l'accès à votre téléphone et à votre compte en sécurité.</li>
+            <li>Vos informations doivent être exactes.</li>
+          </ul>
+          <p>Ce que nous gardons est expliqué dans notre <a href="/privacy.html">Politique de confidentialité</a>.</p>
+        </div></div>
+      </details>
+
+      <details id="alpha">
+        <summary>Alpha, notre assistant<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Alpha est l'assistant qui répond à vos questions sur votre commerce. Il est gratuit.</p>
+        </div></div>
+      </details>
+
+      <details id="interdit">
+        <summary>Ce que vous ne pouvez pas faire<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <ul>
+            <li>Utiliser Patron pour une activité illégale.</li>
+            <li>Essayer d'accéder aux données d'un autre commerce sans autorisation.</li>
+            <li>Copier, revendre ou modifier l'application elle-même.</li>
+          </ul>
+        </div></div>
+      </details>
+
+      <details id="responsabilite">
+        <summary>Responsabilité<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Patron est un outil de gestion. Les décisions commerciales (prix, stock, conseils d'Alpha) restent de votre responsabilité.</p>
+          <p>Nous faisons de notre mieux pour que l'application soit fiable, mais nous ne pouvons pas garantir qu'elle sera toujours sans erreur ou disponible sans interruption.</p>
+        </div></div>
+      </details>
+
+      <details id="suspension">
+        <summary>Suspension et suppression<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Vous pouvez supprimer votre compte à tout moment dans l'application : Plus → Paramètres → Supprimer mon compte.</p>
+          <p>Nous pouvons suspendre ou fermer un compte en cas de fraude, d'abus ou de non-respect de ces conditions.</p>
+        </div></div>
+      </details>
+
+      <details id="changements">
+        <summary>Changements<span class="pm" aria-hidden="true"></span></summary>
+        <div class="body"><div class="body-in">
+          <p>Nous pouvons modifier ces conditions. En cas de changement important, nous vous informerons dans l'application.</p>
+          <p>Continuer à utiliser Patron après un changement veut dire que vous acceptez les nouvelles conditions.</p>
+        </div></div>
+      </details>
+    </section>
+
+    <footer id="contact">
+      <p class="sign">Une question ? Une personne vous répond.</p>
+      <p>Écrivez-nous depuis l'app, dans Aide, ou ici :</p>
+      <div class="contact">
+        <div><span>WhatsApp</span><a href="https://wa.me/16094454809">+1 609 445 4809</a></div>
+      </div>
+      <div class="small"><span>© 2026 Patron</span><span>Mise à jour : 8 novembre 2026</span></div>
     </footer>
-  </div>
+  </main>
 
   <script>
-    (function () {
-      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  (function () {
+    var root = document.documentElement;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.add('ready'); }); });
 
-      // Fine reading-progress hairline
-      var bar = document.querySelector('.progress');
-      var ticking = false;
-      function updateBar() {
-        var el = document.documentElement;
-        var max = el.scrollHeight - el.clientHeight;
-        var p = max > 0 ? (window.scrollY || el.scrollTop) / max : 0;
-        bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, p)) + ')';
-        ticking = false;
-      }
-      window.addEventListener('scroll', function () {
-        if (!ticking) { window.requestAnimationFrame(updateBar); ticking = true; }
-      }, { passive: true });
-      updateBar();
+    // Header hairline + reading progress
+    var bar = document.getElementById('bar'), prog = document.getElementById('prog'), ticking = false;
+    function update() {
+      var y = window.scrollY, h = root.scrollHeight - innerHeight;
+      bar.classList.toggle('scrolled', y > 8);
+      prog.style.transform = 'scaleX(' + (h > 0 ? Math.min(1, y / h) : 0) + ')';
+      ticking = false;
+    }
+    addEventListener('scroll', function () { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
+    update();
 
-      // Gentle stagger inside groups
-      function stagger(selector, stepMs) {
-        var items = document.querySelectorAll(selector);
-        for (var i = 0; i < items.length; i++) {
-          items[i].style.transitionDelay = (i * stepMs) + 'ms';
+    // Promises come into focus one at a time
+    var items = [].slice.call(document.querySelectorAll('.promise'));
+    function showAll() { items.forEach(function (e) { e.classList.add('on'); }); }
+    if (reduce || !('IntersectionObserver' in window)) { showAll(); }
+    else {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('on'); });
+      }, { rootMargin: '-30% 0px -30% 0px' });
+      items.forEach(function (e) { io.observe(e); });
+      setTimeout(function () {
+        items.forEach(function (e) { if (e.getBoundingClientRect().top < innerHeight * .85) e.classList.add('on'); });
+      }, 500);
+    }
+
+    // Open a section directly from a link (e.g. /terms.html#suspension)
+    function openFromHash() {
+      var d = location.hash && document.getElementById(location.hash.slice(1));
+      if (d && d.tagName === 'DETAILS') { d.open = true; d.scrollIntoView({ block: 'start' }); }
+    }
+    addEventListener('hashchange', openFromHash); openFromHash();
+
+    // Smooth open and close
+    if (reduce || !Element.prototype.animate) return;
+    [].forEach.call(document.querySelectorAll('details'), function (d) {
+      var s = d.querySelector('summary'), b = d.querySelector('.body'), busy = false;
+      s.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        if (busy) return; busy = true;
+        if (d.open) {
+          b.animate([{ height: b.scrollHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+            { duration: 380, easing: 'cubic-bezier(.2,.7,.1,1)' }).onfinish = function () { d.open = false; busy = false; };
+        } else {
+          d.open = true;
+          b.animate([{ height: '0px', opacity: 0 }, { height: b.scrollHeight + 'px', opacity: 1 }],
+            { duration: 480, easing: 'cubic-bezier(.2,.7,.1,1)' }).onfinish = function () { busy = false; };
         }
-      }
-      stagger('.hero .reveal', 90);
-      stagger('.cards .card', 80);
-      stagger('#interdit .reveal', 130);
-
-      // Reveal on scroll
-      var revealEls = document.querySelectorAll('.reveal');
-      if (reduceMotion || !('IntersectionObserver' in window)) {
-        for (var j = 0; j < revealEls.length; j++) revealEls[j].classList.add('visible');
-        return;
-      }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-      for (var k = 0; k < revealEls.length; k++) io.observe(revealEls[k]);
-    })();
+      });
+    });
+  })();
   </script>
-
 </body>
 </html>
