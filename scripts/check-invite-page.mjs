@@ -31,7 +31,7 @@ matches('la ligne en gras est bien au-dessus de la promesse', html, /class="lede
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, '<div class="foot">Gratuit.</div>');
-contains('preuve (repli du nombre, vérifié)', html, '<span id="shop-count" class="num">131</span> commerces</strong> déjà sur Patron');
+contains('preuve (repli du nombre, vérifié)', html, '<span id="shop-count" class="num">131</span> personnes</strong> déjà sur Patron');
 contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
 matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
 notMatches('anciennes accroches absentes', html, /On t'invite sur Patron|Ton carnet|Note chaque vente|et fait pour les vendeurs/);
