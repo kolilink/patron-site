@@ -31,7 +31,7 @@ contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, '<div class="foot">Gratuit.</div>');
 // Le nombre figé est réécrit chaque jour par refresh-shop-count : on vérifie
 // qu'il existe, pas sa valeur.
-matches('preuve (repli du nombre figé présent)', html, /<span id="shop-count" class="num">[1-9]\d*<\/span> personnes<\/strong> déjà sur Patron/);
+matches('preuve (repli du nombre figé présent)', html, /<span id="shop-count" class="num">[1-9]\d*<\/span> vendeurs<\/strong> déjà sur Patron/);
 contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
 matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
 notMatches('anciennes accroches absentes', html, /On t'invite sur Patron|Ton carnet|Note chaque vente|et fait pour les vendeurs/);

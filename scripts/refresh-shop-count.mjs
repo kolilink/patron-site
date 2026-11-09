@@ -23,7 +23,7 @@ if (!res.ok) throw new Error('RPC en échec');
 const n = Number(JSON.parse(body));
 if (!Number.isInteger(n) || n < 1 || n > 1000000) throw new Error('nombre invalide : ' + body);
 
-const re = /(<span id="shop-count" class="num">)(\d+)(<\/span> personnes<\/strong> déjà sur Patron)/;
+const re = /(<span id="shop-count" class="num">)(\d+)(<\/span> vendeurs<\/strong> déjà sur Patron)/;
 const m = html.match(re);
 if (!m) throw new Error('nombre figé introuvable dans la page');
 if (Number(m[2]) === n) { console.log('Déjà à jour : ' + n); process.exit(0); }
