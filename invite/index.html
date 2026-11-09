@@ -436,10 +436,14 @@
             // (repli vérifié à chaque publication) prend le relais.
             var countEl = document.getElementById('shop-count');
             var baked = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
-            var countSettled = false;
-            function rollOnce(n) {
-                if (countSettled) return;
-                countSettled = true;
+            var shownCount = null;
+            function showCount(n) {
+                // Le repli à 900 ms peint vite le nombre figé, mais il ne doit
+                // jamais verrouiller : quand le vrai nombre arrive (même après
+                // 30 s de réseau lent), il remplace le repli. Sans appel ou nombre
+                // identique, rien ne bouge — un seul rouleau par valeur affichée.
+                if (n === shownCount) return;
+                shownCount = n;
                 if (window.__rollProof) window.__rollProof(n);
             }
             fetch(SUPABASE_URL + '/rest/v1/rpc/public_shop_count', {
@@ -454,10 +458,10 @@
                 .then(function (res) { return res.ok ? res.json() : null; })
                 .then(function (data) {
                     var n = (typeof data === 'number') ? data : null;
-                    rollOnce((typeof n === 'number' && isFinite(n) && n > 0) ? Math.round(n) : baked);
+                    showCount((typeof n === 'number' && isFinite(n) && n > 0) ? Math.round(n) : baked);
                 })
-                .catch(function () { rollOnce(baked); });
-            setTimeout(function () { rollOnce(baked); }, 900);
+                .catch(function () { showCount(baked); });
+            setTimeout(function () { showCount(baked); }, 900);
         })();
     </script>
     <script>
