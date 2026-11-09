@@ -330,6 +330,10 @@
                 storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite=' + inviter);
             }
             if (id) setReferrer(id);
+            // A campaign link (an influencer, no account, no uuid): the referrer carries the slug itself.
+            function setCampaignReferrer(sl) {
+                storePlay.href = PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('patron_invite_slug=' + sl);
+            }
 
             function fitTitle() {
                 // Une seule ligne quoi qu'il arrive : on repart de la
@@ -369,6 +373,13 @@
             }
             setTimeout(reveal, 400);
             if (!id && slug) {
+                // One view of a campaign link (a no-op for a person's slug). Stores nothing about the visitor.
+                fetch(SUPABASE_URL + '/rest/v1/rpc/log_campaign_view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY },
+                    body: JSON.stringify({ p_slug: slug }),
+                    keepalive: true
+                }).catch(function () {});
                 // Short link: the server resolves the slug. Valid → personalised title AND the Play referrer carries the
                 // RESOLVED inviter id (the app attributes by profile id); invalid or any failure → the generic page.
                 // Same single arrival: the card is revealed when the resolution is done (or at the 400 ms ceiling).
@@ -383,6 +394,13 @@
                 })
                     .then(function (res) { return res.ok ? res.json() : null; })
                     .then(function (data) {
+                        // A campaign link: valid, named, but no uuid (the influencer has no account).
+                        if (data && data.valid && data.campaign) {
+                            setCampaignReferrer(slug);
+                            setTitle(data.inviter_name ? String(data.inviter_name).trim() : '');
+                            reveal();
+                            return;
+                        }
                         var resolved = data && data.valid && UUID_RE.test(String(data.inviter_id || '')) ? String(data.inviter_id).toLowerCase() : '';
                         if (!resolved) { setTitle(''); reveal(); return; }
                         setReferrer(resolved);
