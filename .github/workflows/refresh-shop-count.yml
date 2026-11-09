@@ -1,0 +1,29 @@
+name: Nombre de commerces (page d'invitation)
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lire le nombre en direct et réécrire le nombre figé
+        run: node scripts/refresh-shop-count.mjs
+      - name: Vérifier la page
+        run: node scripts/check-invite-page.mjs
+      - name: Publier si changé
+        run: |
+          if git diff --quiet; then echo "Rien à publier"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "invite: nombre figé mis à jour depuis le direct"
+          git push
