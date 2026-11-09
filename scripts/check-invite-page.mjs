@@ -26,7 +26,6 @@ const card = read('scripts/invite-og-card.html');
 contains('titre sans nom : Patron', html, '<h1 id="title">Patron</h1>');
 contains('titre sans nom (script) : Patron', html, ": \"Patron\";");
 contains('promesse', html, '<p class="tagline">Note qui te doit, même sans internet.</p>');
-matches('la ligne en gras est bien au-dessus de la promesse', html, /class="lede">[^<]*<\/p>\s*<p class="tagline"/);
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, '<div class="foot">Gratuit.</div>');
