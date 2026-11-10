@@ -29,8 +29,17 @@
     var cents = Number(raw) * (page.decimals === 0 ? 100 : 1);
     return cents > 0 && cents < page.balance_cents ? cents : null;
   }
+  /* Les marques des trois opérateurs, les mêmes tracés vectoriels que l'app (MethodLogo.tsx). */
+  var LOGOS = [
+    ['Orange Money', '0 0 44 24', 44 / 24, '<path d="M5 19 L17 6" stroke="#1A1A1A" stroke-width="4.2" stroke-linecap="round" fill="none"/><polyline points="7,5 17.5,5 17.5,15.5" stroke="#1A1A1A" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M39 5 L27 18" stroke="#FF7900" stroke-width="4.2" stroke-linecap="round" fill="none"/><polyline points="26.5,8.5 26.5,19 37,19" stroke="#FF7900" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'],
+    ['MTN MoMo', '0 0 41 24', 41 / 24, '<rect width="41" height="24" rx="4" fill="#FFCB05"/><ellipse cx="20.5" cy="12" rx="17.5" ry="9" stroke="#1A1A1A" stroke-width="1.8" fill="none"/><text x="20.5" y="15.6" font-size="9.5" font-weight="900" fill="#1A1A1A" text-anchor="middle" font-family="Arial,Helvetica,sans-serif">MTN</text>'],
+    ['PayCard', '95 112 954 536', 954 / 536, '<path d="M197 590 A267 267 0 1 1 365 647 L365 545 A165 165 0 1 0 197 380 Z" fill="#1A1A1A"/><path d="M1049 295 A268 268 0 1 0 1049 465 L938 465 A166 166 0 1 1 938 295 Z" fill="#1A1A1A"/>']
+  ];
   function methods() {
-    return '<div class="m"><span class="om">Orange Money</span><span class="mtn">MTN MoMo</span><span class="pc">PayCard</span></div>';
+    return '<div class="m">' + LOGOS.map(function (l) {
+      var w = Math.round(l[2] * 26);
+      return '<svg role="img" aria-label="' + l[0] + '" width="' + w + '" height="26" viewBox="' + l[1] + '">' + l[3] + '</svg>';
+    }).join('') + '</div>';
   }
   function inactive() {
     return '<div class="card"><h1>Lien inactif</h1><p class="sub">Ce lien n’est plus actif. Demandez un nouveau lien à la boutique.</p></div>';
