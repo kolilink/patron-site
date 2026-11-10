@@ -1,5 +1,5 @@
-# Netlify serves this whole repo as patron.kolilink.com (it replaces GitHub Pages). Only /pay/* and /p/* run code
-# (netlify/functions/p.mjs); everything else is the same static files as before.
+# Netlify serves this repo at pay.patron.kolilink.com ONLY. patron.kolilink.com stays on GitHub Pages.
+# Only /pay/* and /p/* run code (netlify/functions/p.mjs); the rest is just static files (unused on this host).
 [build]
   publish = "."
   command = "echo no build"
@@ -9,7 +9,7 @@
   node_bundler = "esbuild"
   external_node_modules = ["@resvg/resvg-js"]
 
-# Universal links / app links: the same files GitHub Pages served, with an explicit JSON type.
+# Harmless on this host; kept so the files are served right if the whole site ever moves here.
 [[headers]]
   for = "/.well-known/apple-app-site-association"
   [headers.values]
