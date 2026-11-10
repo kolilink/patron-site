@@ -65,9 +65,63 @@
       '<button class="btn" disabled>Payer ' + money(page, target) + '</button>' +
       '<p class="note">Le paiement en ligne s’ouvre bientôt pour cette boutique.</p></div>';
   }
+  /* ── Les états d'une tentative de paiement (migration_v276). Seul « confirmed » a bougé de l'argent. ── */
+  var REASONS = {
+    insufficient_funds: 'Solde insuffisant.',
+    wrong_code: 'Code secret incorrect.',
+    operator_down: 'L’opérateur ne répond pas pour le moment.',
+    refused: 'Le paiement a été refusé.'
+  };
+  /* at = { state, reason, amount_cents, balance_cents, min_cents } ; o = { waitedMs, demo } */
+  function renderAttempt(page, at, o) {
+    o = o || {};
+    var shop = esc(page.shop_name), amt = at.amount_cents != null ? money(page, at.amount_cents) : '';
+    var banner = o.demo ? '<p class="demo">EXEMPLE · aucun paiement réel</p>' : '';
+    var head = banner + '<h1>' + shop + '</h1>';
+    var again = '<a class="btn" href="">Réessayer</a>';
+    var verify = '<a class="btn" href="">Vérifier</a>';
+    var body;
+    switch (at.state) {
+      case 'open':
+        body = '<p class="sub">Confirmez avec votre code secret sur votre téléphone.</p><p class="big">' + amt + '</p>' +
+          ((o.waitedMs || 0) >= 120000 ? verify : '<p class="note">En attente de votre confirmation…</p>');
+        break;
+      case 'confirmed':
+        body = '<p class="ok">Paiement reçu ✓</p><p class="big">' + amt + '</p>' +
+          '<p class="sub">' + (at.balance_cents > 0 ? 'Il vous reste ' + money(page, at.balance_cents) + '.' : 'Vous ne devez plus rien à ' + shop + '. Merci !') + '</p>' +
+          '<p class="note">Faites une capture d’écran pour garder ce reçu.</p>';
+        break;
+      case 'failed':
+        body = '<p class="sub">Le paiement n’est pas passé. Votre argent n’a pas bougé.</p>' +
+          (REASONS[at.reason] ? '<p class="why">' + REASONS[at.reason] + '</p>' : '') + again;
+        break;
+      case 'expired':
+        body = '<p class="sub">Toujours en attente. Si votre compte a été débité, la boutique le verra dès la confirmation.</p>' + verify;
+        break;
+      case 'busy':
+        body = '<p class="sub">Un paiement est déjà en cours sur ce lien.</p>' + verify;
+        break;
+      case 'too_low':
+        body = '<p class="sub">Minimum ' + money(page, at.min_cents) + ' par paiement.</p>';
+        break;
+      default:
+        return inactive();
+    }
+    return '<div class="card">' + head + body + '</div>';
+  }
+  /* ?demo=open|confirmed|failed|expired|busy|too_low — des écrans d'exemple, marqués comme tels, jamais de vraies données. */
+  var DEMO_PAGE = { shop_name: 'Boutique Exemple', first_name: 'Client', currency: 'GNF', decimals: 0 };
+  function demo(name, reason) {
+    var states = ['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'];
+    if (states.indexOf(name) < 0) return null;
+    return renderAttempt(DEMO_PAGE, { state: name, reason: reason || 'insufficient_funds', amount_cents: 4000000, balance_cents: 4500000, min_cents: 100000 },
+      { demo: true, waitedMs: 0 });
+  }
   /* search = location.search. Retourne le HTML à afficher ; ne lance jamais d'exception. */
   async function loadAndRender(fetchFn, search) {
     var q = new URLSearchParams(search || '');
+    var d = q.get('demo') ? demo(q.get('demo'), q.get('reason')) : null;
+    if (d) return d;
     var t = q.get('t') || '';
     if (!TOKEN_RE.test(t)) return inactive();                 // un jeton mal formé ne part jamais au serveur
     var res;
@@ -83,7 +137,7 @@
     return render(page, q.get('a'));
   }
 
-  var api = { formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
+  var api = { renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.PatronPay = api;
   var app = root.document && root.document.getElementById('app');

@@ -71,5 +71,27 @@ check('ne demande jamais le code secret', html.includes('ne vous demandera jamai
 check('léger : < 100 Ko, aucune police web, aucun script tiers', html.length + js.length < 100_000 && !/@font-face|<script src="https?:/.test(html));
 check('og.png : vrai PNG 1200×630 sous 300 Ko', png[1] === 0x50 && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630 && png.length < 300 * 1024);
 
+// ── les états d'une tentative (layer 5)
+const at = (state, extra = {}) => P.renderAttempt(owing, { state, amount_cents: 4_000_000, balance_cents: 4_500_000, min_cents: 100_000, ...extra });
+check('en attente : phrase simple, pas de bouton Payer, pas de Vérifier tout de suite', at('open').includes('Confirmez avec votre code secret') && !at('open').includes('Vérifier') && !at('open').includes('Payer'));
+check('en attente > 2 min : « Vérifier », jamais un second « Payer »', P.renderAttempt(owing, { state: 'open', amount_cents: 1 }, { waitedMs: 130_000 }).includes('Vérifier') && !at('open', {}).includes('Payer'));
+check('payé en partie : reçu + nouveau Reste', at('confirmed').includes('Paiement reçu') && at('confirmed').includes(`45${NB}000`));
+check('payé en entier : « Vous ne devez plus rien »', at('confirmed', { balance_cents: 0 }).includes('Vous ne devez plus rien à Boutique Mariama'));
+check('échec : « Votre argent n’a pas bougé » + Réessayer', at('failed').includes('Votre argent n’a pas bougé') && at('failed').includes('Réessayer'));
+for (const r of Object.keys(P.REASONS)) check(`échec « ${r} » : une raison en clair`, at('failed', { reason: r }).includes(P.REASONS[r]));
+check('échec : raison inconnue ou hostile = aucune raison affichée', !at('failed', { reason: '<img src=x>' }).includes('<img') && !at('failed', { reason: 'other' }).includes('class="why"'));
+check('expiré : « Toujours en attente… » + Vérifier', at('expired').includes('Toujours en attente') && at('expired').includes('Vérifier'));
+check('déjà un paiement en cours : Vérifier', at('busy').includes('déjà en cours') && at('busy').includes('Vérifier'));
+check('sous le minimum : le minimum est dit', at('too_low').includes(`Minimum 1${NB}000 GNF`));
+check('état inconnu : lien inactif', P.renderAttempt(owing, { state: 'weird' }).includes('Lien inactif'));
+check('aucun état n’appelle le serveur ni ne contient de script', ['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'].every((s) => !/<script|fetch\(/.test(at(s))));
+// exemples : chaque état s'ouvre avec ?demo=, clairement marqué, sans aucune vraie donnée
+for (const s of ['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low']) {
+  const h = await P.loadAndRender(async () => { throw new Error('jamais'); }, `?demo=${s}`);
+  check(`démo « ${s} » : marquée EXEMPLE, boutique fictive, aucun appel réseau`, h.includes('EXEMPLE') && h.includes('Boutique Exemple') && !/Mariama|Aminata/.test(h));
+}
+check('démo inconnue : ignorée (jeton absent = lien inactif)', (await P.loadAndRender(resp(200, owing), '?demo=hack')).includes('Lien inactif'));
+check('les phrases de la page ont un seul ton : aucun mot d’alerte (« erreur », « échoué », « impayé »)', !/erreur|échoué|impay/i.test(Object.values(P.REASONS).join(' ') + at('failed') + at('expired')));
+
 if (failures) { console.error(`\n${failures} vérification(s) en échec`); process.exit(1); }
 console.log('\ntout est vert');
