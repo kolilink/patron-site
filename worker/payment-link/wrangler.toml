@@ -1,0 +1,12 @@
+name = "patron-payment-link"
+main = "index.mjs"
+compatibility_date = "2026-11-01"
+# Route on the Patron domain: only /p/* goes to the Worker, everything else stays on GitHub Pages.
+routes = [{ pattern = "patron.kolilink.com/p/*", zone_name = "kolilink.com" }]
+[vars]
+PAYMENT_PAGE_URL = "https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-page"
+# secret: wrangler secret put RELAY_SECRET   (same value as PAYMENT_PAGE_RELAY_SECRET on Supabase)
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]
+fallthrough = true
