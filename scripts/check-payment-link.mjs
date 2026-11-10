@@ -1,86 +1,64 @@
 #!/usr/bin/env node
-// Garde de la page de paiement (/p/<token>) : rendu, aperçu WhatsApp, carte image.
-// node scripts/check-payment-link.mjs (exit 1 si échec). La carte PNG n'est vérifiée que si
-// worker/payment-link/node_modules est installé (npm i dans ce dossier).
-import { readFileSync, existsSync } from 'node:fs';
+// Garde de la page de paiement statique /p/?t=<jeton> : rendu, états, aperçu WhatsApp générique.
+// Zéro dépendance : node scripts/check-payment-link.mjs (exit 1 si échec).
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const W = join(root, 'worker/payment-link');
-const R = await import(pathToFileURL(join(W, 'render.mjs')));
-const { cardSvg } = await import(pathToFileURL(join(W, 'card-svg.mjs')));
-const Worker = (await import(pathToFileURL(join(W, 'index.mjs')))).default;
+const P = createRequire(import.meta.url)(join(root, 'p/pay.js'));
+const html = readFileSync(join(root, 'p/index.html'), 'utf8');
+const js = readFileSync(join(root, 'p/pay.js'), 'utf8');
+const png = readFileSync(join(root, 'p/og.png'));
 
 let failures = 0;
 const check = (label, ok) => { console.log(`${ok ? '✓' : '✗'} ${label}`); if (!ok) failures += 1; };
-
+const NB = ' ';
 const TOKEN = 'k7q2xAbCdEfGhIjKlMnOpQ';
 const owing = { state: 'owing', shop_name: 'Boutique Mariama', first_name: 'Aminata', currency: 'GNF', decimals: 0, balance_cents: 8_500_000,
   last_lines: [{ date: '2026-11-08', item: 'Riz +2', amount_cents: 2_500_000 }] };
 
-// ── amounts
-check('85 000 GNF', R.formatAmount(8_500_000, 0) === '85 000');
-check('two-decimal currency keeps its cents', R.formatAmount(123_456, 2) === '1 234,56');
-check('never negative', R.formatAmount(-5, 0) === '0');
-// ── requested amount
-check('« ?a=40000 » is honoured below the Reste', R.requestedCents(owing, '40000') === 4_000_000);
-check('a request at or above the Reste is ignored', R.requestedCents(owing, '85000') === null && R.requestedCents(owing, '999999') === null);
-check('garbage in ?a= is ignored', ['', '-5', '1e3', '40000.5', 'abc', '0', "1'or'1"].every((x) => R.requestedCents(owing, x) === null));
+// ── montants
+check('85 000 GNF', P.formatAmount(8_500_000, 0) === `85${NB}000`);
+check('devise à 2 décimales : les centimes restent', P.formatAmount(123_456, 2) === `1${NB}234,56`);
+check('jamais négatif', P.formatAmount(-5, 0) === '0');
+check('?a=40000 respecté sous le Reste', P.requestedCents(owing, '40000') === 4_000_000);
+check('?a= égal ou au-dessus du Reste ignoré', P.requestedCents(owing, '85000') === null && P.requestedCents(owing, '999999') === null);
+check('?a= absurde ignoré', ['', '-5', '1e3', '40000.5', 'abc', '0', "1'or'1"].every((x) => P.requestedCents(owing, x) === null));
+
 // ── page
-const html = R.renderPage(owing, { token: TOKEN, v: '3', a: '40000' });
-check('shows shop, first name, Reste', html.includes('Boutique Mariama') && html.includes('Pour Aminata') && html.includes('85 000'));
-check('shows what the shop asked for + « Tout payer »', html.includes('demande 40 000 GNF') && html.includes('Tout payer'));
-check('Payer shows the requested amount and is inactive until payments open', html.includes('Payer 40 000 GNF') && /<button class="btn" disabled>/.test(html));
-check('the three methods', ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => html.includes(m)));
-check('og tags: title, description, image with ?v=', html.includes('og:title" content="Boutique Mariama · 85 000 GNF à payer"') && html.includes('Payez en 30 secondes') && html.includes(`/p/${TOKEN}/card.png?v=3`));
-check('the customer\'s name is never in the preview tags', !/og:[^>]*(Aminata|Diallo)/.test(html));
-check('noindex', html.includes('noindex'));
-check('light: under 100 KB, no web fonts, no external requests', html.length < 100_000 && !/@font-face|<link|<script|https?:\/\/(?!patron\.kolilink\.com)/.test(html.replace(/xmlns="[^"]*"/g, '')));
-check('asks for no secret code', html.includes('ne vous demande jamais votre code secret'));
-check('hostile values are escaped', !R.renderPage({ ...owing, shop_name: '<script>alert(1)</script>', first_name: '"><img src=x>' }, { token: TOKEN }).match(/<script>alert|<img src=x>/));
-const clear = R.renderPage({ ...owing, state: 'clear', balance_cents: 0 }, { token: TOKEN });
-check('nothing owed: thank-you, no pay button', clear.includes('Vous ne devez rien à Boutique Mariama. Merci !') && !clear.includes('<button'));
-check('inactive: one generic sentence, no shop data', R.renderPage({ state: 'inactive' }).includes("Ce lien n'est plus actif") && !R.renderPage({ state: 'inactive' }).includes('Boutique'));
-check('bots recognised', ['WhatsApp/2.23', 'facebookexternalhit/1.1', 'TelegramBot'].every(R.isBot) && !R.isBot('Mozilla/5.0 (Linux; Android 12) Chrome/120'));
+const out = P.render(owing, '40000');
+check('boutique, prénom, Reste', out.includes('Boutique Mariama') && out.includes('Pour Aminata') && out.includes(`85${NB}000`));
+check('montant demandé + « Tout payer »', out.includes(`demande 40${NB}000 GNF`) && out.includes('Tout payer'));
+check('Payer montre le montant demandé et reste inactif', out.includes(`Payer 40${NB}000 GNF`) && /<button class="btn" disabled>/.test(out));
+check('les trois moyens', ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => out.includes(m)));
+check('dernières lignes de crédit affichées', out.includes('Riz +2'));
+check('valeurs hostiles échappées', !P.render({ ...owing, shop_name: '<script>alert(1)</script>', first_name: '"><img src=x>' }).match(/<script>alert|<img src=x>/));
+const clear = P.render({ ...owing, state: 'clear', balance_cents: 0 });
+check('rien dû : remerciement, pas de bouton', clear.includes('Vous ne devez rien à Boutique Mariama. Merci !') && !clear.includes('<button'));
+const dead = P.render({ state: 'inactive' });
+check('inactif : une phrase générique, aucune donnée', dead.includes('n’est plus actif') && !dead.includes('Boutique'));
 
-// ── worker routing (fetch stubbed)
-function worker(pageOrStatus) {
-  const seen = [];
-  globalThis.fetch = async (u, init) => { seen.push({ u: String(u), h: init.headers });
-    return typeof pageOrStatus === 'number' ? new Response('', { status: pageOrStatus }) : new Response(JSON.stringify(pageOrStatus), { status: 200 }); };
-  const call = (path, ua = 'Mozilla/5.0') => Worker.fetch(new Request(`https://patron.kolilink.com${path}`, { headers: { 'user-agent': ua, 'cf-connecting-ip': '9.9.9.9' } }),
-    { PAYMENT_PAGE_URL: 'https://x/payment-page', RELAY_SECRET: 's' });
-  return { call, seen };
-}
-let w = worker(owing); let r = await w.call(`/p/${TOKEN}`);
-check('worker serves HTML, never cached, with the relay secret and the visitor address', r.status === 200 && r.headers.get('content-type').startsWith('text/html') && r.headers.get('cache-control').includes('no-store') && w.seen[0].h['x-relay-secret'] === 's' && w.seen[0].h['x-client-ip'] === '9.9.9.9');
-check('a person is not flagged as a bot', !w.seen[0].u.includes('bot=1'));
-w = worker(owing); await w.call(`/p/${TOKEN}`, 'WhatsApp/2.23.20');
-check('WhatsApp\'s robot is flagged (so it never marks « Vu »)', w.seen[0].u.includes('bot=1'));
-w = worker({ state: 'inactive' }); r = await w.call(`/p/${TOKEN}`);
-check('unknown / disabled link: 404 page', r.status === 404);
-w = worker(owing); r = await w.call('/p/short');
-check('malformed token never reaches the server', r.status === 404 && w.seen.length === 0);
-for (const code of [503, 429]) { w = worker(code); r = await w.call(`/p/${TOKEN}`); check(`server ${code}: « Pas de connexion » + Réessayer, not a crash`, r.status === 503 && (await r.text()).includes('Réessayer')); }
-w = worker(owing); r = await w.call('/p/x/y/z'); check('other paths: 404', r.status === 404);
+// ── chargement (fetch simulé)
+const resp = (status, body) => async () => ({ status, json: async () => body });
+const seen = [];
+const spy = (f) => (u) => { seen.push(u); return f(u); };
+check('jeton mal formé : jamais envoyé au serveur', (await P.loadAndRender(spy(resp(200, owing)), '?t=abc')).includes('Lien inactif') && seen.length === 0);
+check('sans jeton : lien inactif', (await P.loadAndRender(spy(resp(200, owing)), '')).includes('Lien inactif') && seen.length === 0);
+check('bon jeton : appelle la fonction avec le jeton', (await P.loadAndRender(spy(resp(200, owing)), `?t=${TOKEN}&a=40000`)).includes('Boutique Mariama') && seen[0] === `${P.FN}?t=${TOKEN}`);
+check('lien inconnu / désactivé : lien inactif', (await P.loadAndRender(resp(200, { state: 'inactive' }), `?t=${TOKEN}`)).includes('Lien inactif'));
+for (const s of [429, 500, 503]) check(`serveur ${s} : « Pas de connexion » + Réessayer`, (await P.loadAndRender(resp(s, {}), `?t=${TOKEN}`)).includes('Réessayer'));
+check('réseau coupé : « Pas de connexion », sans exception', (await P.loadAndRender(async () => { throw new Error('x'); }, `?t=${TOKEN}`)).includes('Pas de connexion'));
+check('réponse illisible : « Pas de connexion »', (await P.loadAndRender(async () => ({ status: 200, json: async () => { throw new Error('x'); } }), `?t=${TOKEN}`)).includes('Pas de connexion'));
 
-// ── card
-const svg = cardSvg(owing);
-check('card: shop + amount + the three methods', svg.includes('BOUTIQUE MARIAMA') && svg.includes('85 000') && ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => svg.includes(m)));
-check('card: never the customer\'s name', !/Aminata|Diallo/.test(svg));
-check('card: a huge amount shrinks to fit', (() => { const s = cardSvg({ ...owing, balance_cents: 99_999_999_999_900 }); const m = s.match(/font-size="(\d+)" font-weight="700" fill="#17152b">99/); return m && Number(m[1]) < 150; })());
-const resvgDir = join(W, 'node_modules/@resvg/resvg-wasm');
-if (existsSync(resvgDir)) {
-  const { Resvg, initWasm } = await import(pathToFileURL(join(resvgDir, 'index.mjs')));
-  await initWasm(readFileSync(join(resvgDir, 'index_bg.wasm')));
-  const fonts = ['Inter_700Bold', 'Inter_400Regular'].map((f) => new Uint8Array(readFileSync(join(W, `fonts/${f}.ttf`))));
-  for (const [label, p] of [['owing', owing], ['nothing owed', { ...owing, state: 'clear', balance_cents: 0 }]]) {
-    const img = new Resvg(cardSvg(p), { font: { fontBuffers: fonts, defaultFontFamily: 'Inter', loadSystemFonts: false } }).render();
-    const png = img.asPng();
-    check(`card PNG (${label}): real PNG, 1200×630, under 300 KB (${Math.round(png.length / 1024)} KB)`, png[1] === 0x50 && img.width === 1200 && img.height === 630 && png.length < 300 * 1024);
-  }
-} else console.log('· card PNG not rasterised (run npm i in worker/payment-link)');
+// ── aperçu WhatsApp (page statique : générique, jamais de nom)
+check('og : titre, description, image', html.includes('og:title" content="Payez votre crédit"') && html.includes('Payez en 30 secondes') && html.includes('https://patron.kolilink.com/p/og.png'));
+check('aucune donnée de client dans la page statique', !/Aminata|Mariama|Diallo/.test(html + js));
+check('noindex, pas de référent', html.includes('noindex') && html.includes('no-referrer'));
+check('ne demande jamais le code secret', html.includes('ne vous demande jamais votre code secret'));
+check('léger : < 100 Ko, aucune police web, aucun script tiers', html.length + js.length < 100_000 && !/@font-face|<script src="https?:/.test(html));
+check('og.png : vrai PNG 1200×630 sous 300 Ko', png[1] === 0x50 && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630 && png.length < 300 * 1024);
 
-if (failures) { console.error(`\n${failures} check(s) failed`); process.exit(1); }
-console.log('\nall checks passed');
+if (failures) { console.error(`\n${failures} vérification(s) en échec`); process.exit(1); }
+console.log('\ntout est vert');

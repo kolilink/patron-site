@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Inter">
+<rect width="1200" height="630" fill="#faf8f3"/>
+<text x="70" y="120" font-size="40" font-weight="700" letter-spacing="3" fill="#6b6880">PAIEMENT PAR LIEN</text>
+<text x="70" y="270" font-size="104" font-weight="700" fill="#17152b">Payez votre</text>
+<text x="70" y="385" font-size="104" font-weight="700" fill="#17152b">crédit</text>
+<circle cx="1020" cy="170" r="92" fill="none" stroke="#6366f1" stroke-width="16"/>
+<text x="1020" y="190" font-size="60" font-weight="700" text-anchor="middle" fill="#17152b">30 s</text>
+<rect x="70" y="500" width="270" height="64" rx="12" fill="#ff7900"/><text x="205" y="543" font-size="30" font-weight="700" text-anchor="middle" fill="#fff">Orange Money</text>
+<rect x="360" y="500" width="190" height="64" rx="12" fill="#ffcc00"/><text x="455" y="543" font-size="30" font-weight="700" text-anchor="middle" fill="#111">MTN MoMo</text>
+<rect x="570" y="500" width="190" height="64" rx="12" fill="#0a7a3d"/><text x="665" y="543" font-size="30" font-weight="700" text-anchor="middle" fill="#fff">PayCard</text>
+<circle cx="900" cy="532" r="14" fill="none" stroke="#6366f1" stroke-width="6"/>
+<text x="930" y="545" font-size="36" font-weight="700" fill="#17152b">patron</text>
+</svg>
