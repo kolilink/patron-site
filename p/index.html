@@ -15,6 +15,14 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://jnxpujsyvbenqgjbvifh.supabase.co" crossorigin>
+<script>
+/* VITESSE : on lance la demande des chiffres tout de suite, sans attendre que pay.js soit téléchargé.
+   pay.js reprend cette demande (window.__pay) au lieu d'en refaire une. Même règle de jeton que pay.js. */
+(function () {
+  var t = new URLSearchParams(location.search).get('t') || '';
+  if (/^[A-Za-z0-9_-]{22}$/.test(t)) window.__pay = { t: t, p: fetch('https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-page?t=' + encodeURIComponent(t)).catch(function () { return null; }) };
+})();
+</script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f6f5fb;color:#17152b;font:16px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 main{max-width:440px;margin:0 auto;padding:20px 16px 40px}.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(23,21,43,.08)}

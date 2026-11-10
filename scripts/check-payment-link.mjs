@@ -52,6 +52,17 @@ for (const s of [429, 500, 503]) check(`serveur ${s} : « Pas de connexion » + 
 check('réseau coupé : « Pas de connexion », sans exception', (await P.loadAndRender(async () => { throw new Error('x'); }, `?t=${TOKEN}`)).includes('Pas de connexion'));
 check('réponse illisible : « Pas de connexion »', (await P.loadAndRender(async () => ({ status: 200, json: async () => { throw new Error('x'); } }), `?t=${TOKEN}`)).includes('Pas de connexion'));
 
+// ── vitesse : la demande part dès le HTML, pay.js la reprend
+check('index.html lance la demande des chiffres avant pay.js, avec le même jeton et la même adresse', html.indexOf('window.__pay') > -1 && html.indexOf('window.__pay') < html.indexOf('<script src="/p/pay.js">') && html.includes(P.FN) && html.includes('^[A-Za-z0-9_-]{22}$'));
+globalThis.__pay = { t: TOKEN, p: Promise.resolve({ status: 200, json: async () => owing }) };
+let called = 0;
+check('pay.js reprend la demande anticipée : aucune 2e demande', (await P.loadAndRender(async () => { called += 1; return { status: 200, json: async () => owing }; }, `?t=${TOKEN}`)).includes('Boutique Mariama') && called === 0);
+globalThis.__pay = { t: TOKEN, p: Promise.resolve(null) };
+check('demande anticipée échouée : une seule reprise normale', (await P.loadAndRender(async () => { called += 1; return { status: 200, json: async () => owing }; }, `?t=${TOKEN}`)).includes('Boutique Mariama') && called === 1);
+globalThis.__pay = { t: 'autre'.padEnd(22, 'x'), p: Promise.resolve({ status: 200, json: async () => ({ state: 'inactive' }) }) };
+check('demande anticipée d\'un autre jeton ignorée', (await P.loadAndRender(async () => ({ status: 200, json: async () => owing }), `?t=${TOKEN}`)).includes('Boutique Mariama'));
+delete globalThis.__pay;
+
 // ── aperçu WhatsApp (page statique : générique, jamais de nom)
 check('og : titre, description, image', html.includes('og:title" content="Payez votre crédit"') && html.includes('Payez en 30 secondes') && html.includes('https://patron.kolilink.com/p/og.png'));
 check('aucune donnée de client dans la page statique', !/Aminata|Mariama|Diallo/.test(html + js));
