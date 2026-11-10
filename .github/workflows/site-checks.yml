@@ -24,7 +24,4 @@ jobs:
         with:
           node-version: 20
       - name: Page de paiement statique et aperçu WhatsApp
-        run: |
-          node scripts/check-payment-link.mjs
-          npm i
-          node scripts/check-payment-link-netlify.mjs
+        run: node scripts/check-payment-link.mjs
