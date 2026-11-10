@@ -47,23 +47,23 @@ function methodsRow() {
   return '<div class="m"><span class="om">Orange Money</span><span class="mtn">MTN MoMo</span><span class="pc">PayCard</span></div>';
 }
 
-export function ogTags(page, token, v) {
-  const image = `${ORIGIN}/p/${encodeURIComponent(token)}/card.png${v ? `?v=${encodeURIComponent(v)}` : ''}`;
+export function ogTags(page, token, v, origin = ORIGIN) {
+  const image = `${origin}/pay/${encodeURIComponent(token)}/card.png${v ? `?v=${encodeURIComponent(v)}` : ''}`;
   const title = page.state === 'owing' ? `${page.shop_name} · ${formatAmount(page.balance_cents, page.decimals)} ${page.currency} à payer` : `${page.shop_name}`;
   const desc = page.state === 'owing' ? 'Payez en 30 secondes : Orange Money, MTN MoMo ou PayCard.' : 'Merci !';
   // never the customer's name: links get forwarded
   return `<meta property="og:type" content="website"><meta property="og:site_name" content="Patron">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
-<meta property="og:url" content="${ORIGIN}/p/${esc(token)}"><meta property="og:image" content="${esc(image)}">
+<meta property="og:url" content="${esc(origin)}/pay/${esc(token)}"><meta property="og:image" content="${esc(image)}">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">`;
 }
 
-export function renderPage(page, { token, v, a } = {}) {
+export function renderPage(page, { token, v, a, origin } = {}) {
   if (!page || (page.state !== 'owing' && page.state !== 'clear')) return renderInactive();
   const name = esc(page.first_name);
   if (page.state === 'clear') {
     return shell(page.shop_name, `<div class="card"><h1>${esc(page.shop_name)}</h1>
-<p class="sub">Pour ${name}</p><p class="big" style="font-size:22px">Vous ne devez rien à ${esc(page.shop_name)}. Merci !</p></div>`, ogTags(page, token, v));
+<p class="sub">Pour ${name}</p><p class="big" style="font-size:22px">Vous ne devez rien à ${esc(page.shop_name)}. Merci !</p></div>`, ogTags(page, token, v, origin));
   }
   const ask = requestedCents(page, a);
   const lines = (page.last_lines ?? []).map((l) =>
@@ -75,7 +75,7 @@ ${ask ? `<p class="ask">${esc(page.shop_name)} demande ${money(page, ask)} aujou
 ${lines ? `<ul>${lines}</ul>` : ''}${methodsRow()}
 <button class="btn" disabled>Payer ${money(page, target)}</button>
 <p class="note">Le paiement en ligne n'est pas encore ouvert pour cette boutique.</p></div>`;
-  return shell(`${page.shop_name} · ${formatAmount(page.balance_cents, page.decimals)} ${page.currency}`, body, ogTags(page, token, v));
+  return shell(`${page.shop_name} · ${formatAmount(page.balance_cents, page.decimals)} ${page.currency}`, body, ogTags(page, token, v, origin));
 }
 
 export function renderInactive() {

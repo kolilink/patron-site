@@ -1,4 +1,4 @@
-// Netlify Function behind pay.kolilink.com/p/<token> (and /p/?t=<token>): the page with THIS link's own
+// Netlify Function behind patron.kolilink.com/pay/<token> (also /p/<token> and ?t=<token>): the page with THIS link's own
 // WhatsApp preview + the card image /p/<token>/card.png. No money logic, no secret: it asks the Supabase
 // `payment-page` function for the live numbers (the 128-bit token is the credential).
 import { isBot, renderPage, renderInactive, renderUnavailable } from '../lib/render.mjs';
@@ -9,7 +9,7 @@ const TOKEN_RE = /^[A-Za-z0-9_-]{22}$/;
 
 export async function handle(request, { ip = '', fetchFn = fetch, renderPng } = {}) {
   const url = new URL(request.url);
-  const m = url.pathname.match(/^\/p(?:\/([^/]+?))?(\/card\.png)?\/?$/);
+  const m = url.pathname.match(/^\/(?:pay|p)(?:\/([^/]+?))?(\/card\.png)?\/?$/);
   if (!m || request.method !== 'GET') return new Response(renderInactive(), { status: 404, headers: HEAD });
   const token = m[1] ?? url.searchParams.get('t') ?? '';
   const card = !!m[2];
@@ -25,7 +25,7 @@ export async function handle(request, { ip = '', fetchFn = fetch, renderPng } = 
     if (page.state !== 'owing' && page.state !== 'clear') return new Response('', { status: 404 });
     return new Response(await renderPng(page), { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=300', 'x-robots-tag': 'noindex' } });
   }
-  return new Response(renderPage(page, { token, v: url.searchParams.get('v'), a: url.searchParams.get('a') }),
+  return new Response(renderPage(page, { token, v: url.searchParams.get('v'), a: url.searchParams.get('a'), origin: url.origin }),
     { status: page.state === 'owing' || page.state === 'clear' ? 200 : 404, headers: HEAD });
 }
 
@@ -33,4 +33,4 @@ export default async (request, context) => {
   const { renderCardPng } = await import('../lib/card.mjs');
   return handle(request, { ip: context?.ip ?? '', renderPng: renderCardPng });
 };
-export const config = { path: ['/p', '/p/*'] };
+export const config = { path: ['/pay', '/pay/*', '/p', '/p/*'] };

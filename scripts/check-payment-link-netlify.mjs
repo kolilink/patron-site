@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Garde de la version Netlify (pay.kolilink.com/p/<jeton>) : aperçu WhatsApp PAR CLIENT, carte image.
+// Garde de la version Netlify (patron.kolilink.com/pay/<jeton>) : aperçu WhatsApp PAR CLIENT, carte image.
 // Exige `npm i` à la racine (resvg). node scripts/check-payment-link-netlify.mjs
 import { handle } from '../netlify/functions/p.mjs';
 import { renderCardPng } from '../netlify/lib/card.mjs';
@@ -20,13 +20,13 @@ function run(path, body, { ua = 'Mozilla/5.0', method = 'GET' } = {}) {
   return { p, seen };
 }
 
-let t = run(`/p/${TOKEN}?v=3`, owing); let r = await t.p; let html = await r.text();
+let t = run(`/pay/${TOKEN}?v=3`, owing); let r = await t.p; let html = await r.text();
 check('page: 200, HTML, never cached, noindex', r.status === 200 && r.headers.get('content-type').startsWith('text/html') && r.headers.get('cache-control').includes('no-store') && r.headers.get('x-robots-tag').includes('noindex'));
 check('og:title carries the shop and the amount', html.includes(`og:title" content="Boutique Mariama · 85${NB}000 GNF à payer"`));
-check('og:image points at this link\'s own card, versioned', html.includes(`https://pay.kolilink.com/p/${TOKEN}/card.png?v=3`) || html.includes(`/p/${TOKEN}/card.png?v=3`));
+check('og:image points at this link\'s own card, versioned', html.includes(`og:image" content="https://pay.kolilink.com/pay/${TOKEN}/card.png?v=3"`) && !html.includes('patron.kolilink.com'));
 check('the customer\'s name is never in the preview tags', !/og:[^>]*(Aminata|Diallo)/.test(html));
 check('the visitor address is forwarded, no bot flag for a person', t.seen[0].h['x-forwarded-for'] === '9.9.9.9' && !t.seen[0].u.includes('bot=1'));
-check('« /p/?t=<jeton> » form also works', (await run(`/p/?t=${TOKEN}`, owing).p).status === 200);
+check('« /pay/<jeton> » is the main path; « /p/<jeton> » and « /p/?t= » still work', (await run(`/p/${TOKEN}`, owing).p).status === 200 && (await run(`/p/?t=${TOKEN}`, owing).p).status === 200 && (await run(`/pay/${TOKEN}`, owing).p).status === 200);
 t = run(`/p/${TOKEN}`, owing, { ua: 'WhatsApp/2.23.20' }); await t.p;
 check('WhatsApp\'s robot is flagged so it never marks « Vu »', t.seen[0].u.includes('bot=1'));
 check('unknown / disabled link: 404 inactive page', (await run(`/p/${TOKEN}`, { state: 'inactive' }).p).status === 404);
@@ -41,6 +41,7 @@ check('card for a dead link: 404', (await run(`/p/${TOKEN}/card.png`, { state: '
 const svg = cardSvg(owing);
 check('card: shop + amount + three methods, never the customer\'s name', svg.includes('BOUTIQUE MARIAMA') && svg.includes('85 000') && ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => svg.includes(m)) && !/Aminata|Diallo/.test(svg));
 check('card: a huge amount shrinks to fit', (() => { const s = cardSvg({ ...owing, balance_cents: 99_999_999_999_900 }); const m = s.match(/font-size="(\d+)" font-weight="700" fill="#17152b">99/); return m && Number(m[1]) < 150; })());
+check('any domain works: og:image follows the address the page is opened on', (await handle(new Request(`https://patron-pay.kolilink.com/p/${TOKEN}`), { fetchFn: async () => new Response(JSON.stringify(owing)), renderPng: renderCardPng }).then((x) => x.text())).includes('og:image" content="https://patron-pay.kolilink.com/pay/'));
 check('page: hostile values escaped', !R.renderPage({ ...owing, shop_name: '<script>alert(1)</script>' }, { token: TOKEN }).includes('<script>alert'));
 
 if (failures) { console.error(`\n${failures} check(s) failed`); process.exit(1); }
