@@ -29,14 +29,14 @@ check('?a= absurde ignoré', ['', '-5', '1e3', '40000.5', 'abc', '0', "1'or'1"].
 
 // ── page
 const out = P.render(owing, '40000');
-check('boutique, prénom, Reste', out.includes('Boutique Mariama') && out.includes('Pour Aminata') && out.includes(`85${NB}000`));
-check('montant demandé + « Tout payer »', out.includes(`demande 40${NB}000 GNF`) && out.includes('Tout payer'));
+check('boutique, prénom, Reste', out.includes('Boutique Mariama') && out.includes('Bonjour Aminata') && out.includes(`85${NB}000`));
+check('montant demandé + « Tout payer »', out.includes(`vous propose de régler 40${NB}000 GNF`) && out.includes('Tout régler'));
 check('Payer montre le montant demandé et reste inactif', out.includes(`Payer 40${NB}000 GNF`) && /<button class="btn" disabled>/.test(out));
 check('les trois moyens', ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => out.includes(m)));
 check('dernières lignes de crédit affichées', out.includes('Riz +2'));
 check('valeurs hostiles échappées', !P.render({ ...owing, shop_name: '<script>alert(1)</script>', first_name: '"><img src=x>' }).match(/<script>alert|<img src=x>/));
 const clear = P.render({ ...owing, state: 'clear', balance_cents: 0 });
-check('rien dû : remerciement, pas de bouton', clear.includes('Vous ne devez rien à Boutique Mariama. Merci !') && !clear.includes('<button'));
+check('rien dû : remerciement, pas de bouton', clear.includes('Tout est réglé. Merci pour votre confiance.') && !clear.includes('<button'));
 const dead = P.render({ state: 'inactive' });
 check('inactif : une phrase générique, aucune donnée', dead.includes('n’est plus actif') && !dead.includes('Boutique'));
 
@@ -64,10 +64,10 @@ check('demande anticipée d\'un autre jeton ignorée', (await P.loadAndRender(as
 delete globalThis.__pay;
 
 // ── aperçu WhatsApp (page statique : générique, jamais de nom)
-check('og : titre, description, image', html.includes('og:title" content="Payez votre crédit"') && html.includes('Payez en 30 secondes') && html.includes('https://patron.kolilink.com/p/og.png'));
+check('og : titre, description, image', html.includes('og:title" content="Votre reste à régler"') && html.includes('En un instant') && html.includes('https://patron.kolilink.com/p/og.png'));
 check('aucune donnée de client dans la page statique', !/Aminata|Mariama|Diallo/.test(html + js));
 check('noindex, pas de référent', html.includes('noindex') && html.includes('no-referrer'));
-check('ne demande jamais le code secret', html.includes('ne vous demande jamais votre code secret'));
+check('ne demande jamais le code secret', html.includes('ne vous demandera jamais votre code secret'));
 check('léger : < 100 Ko, aucune police web, aucun script tiers', html.length + js.length < 100_000 && !/@font-face|<script src="https?:/.test(html));
 check('og.png : vrai PNG 1200×630 sous 300 Ko', png[1] === 0x50 && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630 && png.length < 300 * 1024);
 
