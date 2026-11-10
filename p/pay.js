@@ -71,7 +71,12 @@
     var t = q.get('t') || '';
     if (!TOKEN_RE.test(t)) return inactive();                 // un jeton mal formé ne part jamais au serveur
     var res;
-    try { res = await fetchFn(FN + '?t=' + encodeURIComponent(t)); } catch (e) { return unavailable(); }
+    try {
+      // la demande a déjà été lancée par index.html (même jeton) : on la reprend au lieu d'en refaire une
+      var early = root.__pay && root.__pay.t === t ? root.__pay.p : null;
+      res = early ? await early : null;
+      if (!res) res = await fetchFn(FN + '?t=' + encodeURIComponent(t));   // pas de demande anticipée, ou elle a échoué : une seule reprise
+    } catch (e) { return unavailable(); }
     if (!res || res.status === 429 || res.status >= 500) return unavailable();
     var page;
     try { page = await res.json(); } catch (e) { return unavailable(); }
@@ -83,4 +88,4 @@
   root.PatronPay = api;
   var app = root.document && root.document.getElementById('app');
   if (app) loadAndRender(function (u) { return root.fetch(u); }, root.location.search).then(function (h) { app.innerHTML = h; });
-})(typeof window !== 'undefined' ? window : this);
+})(typeof window !== 'undefined' ? window : globalThis);
