@@ -15,3 +15,16 @@ jobs:
           node-version: 20
       - name: Textes de la page d'invitation
         run: node scripts/check-invite-page.mjs
+
+  payment-link:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Page de paiement statique et aperçu WhatsApp
+        run: |
+          node scripts/check-payment-link.mjs
+          npm i
+          node scripts/check-payment-link-netlify.mjs
