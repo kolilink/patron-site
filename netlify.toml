@@ -1,0 +1,10 @@
+# Netlify serves this repo as pay.kolilink.com. Only /p/* runs code (netlify/functions/p.mjs);
+# patron.kolilink.com stays on GitHub Pages and is untouched.
+[build]
+  publish = "."
+  command = "echo no build"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["@resvg/resvg-js"]
