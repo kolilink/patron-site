@@ -51,19 +51,19 @@
     if (!page || (page.state !== 'owing' && page.state !== 'clear')) return inactive();
     var name = esc(page.first_name), shop = esc(page.shop_name);
     if (page.state === 'clear') {
-      return '<div class="card"><h1>' + shop + '</h1><p class="sub">Pour ' + name + '</p><p class="big" style="font-size:22px">Vous ne devez rien à ' + shop + '. Merci !</p></div>';
+      return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p><p class="big" style="font-size:22px">Tout est réglé. Merci pour votre confiance.</p></div>';
     }
     var ask = requestedCents(page, a);
     var lines = (page.last_lines || []).map(function (l) {
       return '<li><span>' + esc(l.date) + (l.item ? ' · ' + esc(l.item) : '') + '</span><span>' + money(page, l.amount_cents) + '</span></li>';
     }).join('');
     var target = ask || page.balance_cents;
-    return '<div class="card"><h1>' + shop + '</h1><p class="sub">Pour ' + name + '</p>' +
-      '<p class="lab">Reste à payer</p><p class="big">' + formatAmount(page.balance_cents, page.decimals) + ' <small>' + esc(page.currency) + '</small></p>' +
-      (ask ? '<p class="ask">' + shop + ' demande ' + money(page, ask) + ' aujourd’hui. <a href="">Tout payer</a></p>' : '') +
+    return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p>' +
+      '<p class="lab">Il vous reste à régler</p><p class="big">' + formatAmount(page.balance_cents, page.decimals) + ' <small>' + esc(page.currency) + '</small></p>' +
+      (ask ? '<p class="ask">' + shop + ' vous propose de régler ' + money(page, ask) + ' aujourd’hui. <a href="">Tout régler</a></p>' : '') +
       (lines ? '<ul>' + lines + '</ul>' : '') + methods() +
       '<button class="btn" disabled>Payer ' + money(page, target) + '</button>' +
-      '<p class="note">Le paiement en ligne n’est pas encore ouvert pour cette boutique.</p></div>';
+      '<p class="note">Le paiement en ligne s’ouvre bientôt pour cette boutique.</p></div>';
   }
   /* search = location.search. Retourne le HTML à afficher ; ne lance jamais d'exception. */
   async function loadAndRender(fetchFn, search) {
