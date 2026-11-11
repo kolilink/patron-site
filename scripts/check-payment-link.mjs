@@ -31,7 +31,7 @@ check('?a= absurde ignoré', ['', '-5', '1e3', '40000.5', 'abc', '0', "1'or'1"].
 const out = P.render(owing, '40000');
 check('boutique, prénom, Reste', out.includes('Boutique Mariama') && out.includes('Bonjour Aminata') && out.includes(`85${NB}000`));
 check('montant demandé + « Tout payer »', out.includes(`vous propose de régler 40${NB}000 GNF`) && out.includes('Tout régler'));
-check('Payer montre le montant demandé et reste inactif', out.includes(`Payer 40${NB}000 GNF`) && /<button class="btn" disabled>/.test(out));
+check('Payer montre le montant demandé, est actif et porte ce montant (centimes)', out.includes(`Payer 40${NB}000 GNF`) && out.includes('id="pay" data-cents="4000000"') && !out.includes('disabled'));
 check('les trois moyens', ['Orange Money', 'MTN MoMo', 'PayCard'].every((m) => out.includes(m)));
 check('dernières lignes de crédit affichées', out.includes('Riz +2'));
 check('valeurs hostiles échappées', !P.render({ ...owing, shop_name: '<script>alert(1)</script>', first_name: '"><img src=x>' }).match(/<script>alert|<img src=x>/));
@@ -115,6 +115,54 @@ for (const d of ['twice', 'advance', 'over', 'short']) {
 
 // ── SÉCURITÉ (couche 8)
 const crypto = await import('node:crypto');
+// ── couche 9 : « Payer » (Djomy) et le retour
+const ATT = '6f1c2a40-1b2c-4d5e-8f90-a1b2c3d4e5f6';
+const json = (body, status = 200) => async () => ({ status, json: async () => body });
+check('startBody / checkBody : JSON, jamais de montant ni d’état dans une vérification', JSON.parse(P.startBody(TOKEN, 4_000_000)).amount_cents === 4_000_000
+  && Object.keys(JSON.parse(P.checkBody(TOKEN, ATT))).sort().join() === 'a,op,t');
+check('Payer → la page de Djomy (https, djomy.africa) seulement', (await P.startPay(json({ state: 'redirect', attempt_id: ATT, url: 'https://pay.djomy.africa/x' }), owing, TOKEN, 1)).go === 'https://pay.djomy.africa/x');
+for (const url of ['http://pay.djomy.africa/x', 'https://evil.example/x', 'https://djomy.africa.evil.com/x', 'javascript:alert(1)']) {
+  check(`Payer : une adresse de redirection non-Djomy n’est jamais suivie (${url})`, !(await P.startPay(json({ state: 'redirect', attempt_id: ATT, url }), owing, TOKEN, 1)).go);
+}
+check('Payer : l’appel part vers payment-pay, en POST text/plain, sans jeton dans l’adresse', await (async () => {
+  seen.length = 0; inits.length = 0;
+  await P.startPay(spy(json({ state: 'busy' })), owing, TOKEN, 4_000_000);
+  return seen[0] === P.FN_PAY && !seen[0].includes(TOKEN) && inits[0].method === 'POST' && inits[0].headers['content-type'] === 'text/plain';
+})());
+check('Payer refusé : l’état est dit (déjà en cours, minimum, montant changé, trop d’essais)', (await P.startPay(json({ state: 'busy' }), owing, TOKEN, 1)).html.includes('déjà en cours')
+  && (await P.startPay(json({ state: 'too_low', min_cents: 1_000_000 }), owing, TOKEN, 1)).html.includes(`Minimum 10${NB}000 GNF`)
+  && (await P.startPay(json({ state: 'too_high' }), owing, TOKEN, 1)).html.includes('a changé')
+  && (await P.startPay(json({ state: 'rate_limited' }), owing, TOKEN, 1)).html.includes('Trop d’essais'));
+check('Payer : Djomy indisponible → « Le paiement n’est pas passé. Votre argent n’a pas bougé » + Réessayer vers le lien', (await P.startPay(json({ state: 'failed', reason: 'operator_down' }), owing, TOKEN, 1)).html.includes('Votre argent n’a pas bougé')
+  && (await P.startPay(json({ state: 'failed', reason: 'operator_down' }), owing, TOKEN, 1)).html.includes(`href="/p/#t=${TOKEN}"`));
+check('Payer : serveur ou réseau en panne → « Pas de connexion », sans exception', (await P.startPay(async () => { throw new Error('x'); }, owing, TOKEN, 1)).html.includes('Pas de connexion')
+  && (await P.startPay(json({}, 503), owing, TOKEN, 1)).html.includes('Pas de connexion'));
+check('retour de Djomy (?r=…#t=…) : la page demande à NOTRE serveur, puis montre le reçu', await (async () => {
+  const urls = [];
+  const f = async (u) => { urls.push(u); return u === P.FN ? { status: 200, json: async () => owing } : { status: 200, json: async () => ({ state: 'confirmed', amount_cents: 4_000_000, confirmed_cents: 4_000_000, balance_cents: 4_500_000 }) }; };
+  const h = await P.loadAndRender(f, `?r=${ATT}&status=success`, `#t=${TOKEN}`);
+  return h.includes('Paiement reçu') && urls.join() === `${P.FN},${P.FN_PAY}` && P.lastState().done === true;
+})());
+check('retour : « status=success » dans l’adresse ne prouve rien — en attente tant que le serveur ne dit pas « confirmed »', await (async () => {
+  const f = async (u) => u === P.FN ? { status: 200, json: async () => owing } : { status: 200, json: async () => ({ state: 'open', amount_cents: 4_000_000 }) };
+  const h = await P.loadAndRender(f, `?r=${ATT}&status=success&amount=999999`, `#t=${TOKEN}`);
+  return !h.includes('Paiement reçu') && h.includes('Confirmez') && P.lastState().done === false;
+})());
+check('retour sans « # » : le jeton gardé sur ce téléphone pour CETTE tentative seulement', await (async () => {
+  const store = { getItem: () => JSON.stringify({ t: TOKEN, r: ATT }) };
+  const f = async (u) => u === P.FN ? { status: 200, json: async () => owing } : { status: 200, json: async () => ({ state: 'failed' }) };
+  const ok = (await P.loadAndRender(f, `?r=${ATT}`, '', store)).includes('n’est pas passé');
+  const other = (await P.loadAndRender(f, '?r=11111111-1b2c-4d5e-8f90-a1b2c3d4e5f6', '', store)).includes('Lien inactif');
+  const broken = (await P.loadAndRender(f, `?r=${ATT}`, '', { getItem: () => '{oops' })).includes('Lien inactif');
+  return ok && other && broken;
+})());
+check('retour : une tentative mal formée est ignorée (page normale)', P.attemptFrom('?r=abc') === '' && P.attemptFrom(`?r=${ATT}`) === ATT);
+check('retour : réseau coupé pendant l’attente = on attend encore (jamais « échec »)', await (async () => {
+  const c = await P.checkOnce(async () => { throw new Error('x'); }, owing, TOKEN, ATT, 0);
+  return c.done === false && c.html.includes('Confirmez');
+})());
+check('la page ne fabrique jamais de « Paiement reçu » : il vient seulement de la réponse du serveur', !/Paiement reçu[^']*'\s*\+[^;]*status=/.test(js));
+
 check('nouveau lien #t= : lu après « # », envoyé en POST text/plain, l’adresse appelée ne contient jamais le jeton', await (async () => {
   seen.length = 0; inits.length = 0;
   const h = await P.loadAndRender(spy(resp(200, owing)), '', `#t=${TOKEN}`);
