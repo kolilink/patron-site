@@ -85,6 +85,7 @@
       '<p class="lab">Il vous reste à régler</p><p class="big">' + formatAmount(page.balance_cents, page.decimals) + ' <small>' + esc(page.currency) + '</small></p>' +
       (ask ? '<p class="ask">' + shop + ' vous propose de régler ' + money(page, ask) + ' aujourd’hui. <a href="">Tout régler</a></p>' : '') +
       (lines ? '<ul>' + lines + '</ul>' : '') + methods() +
+      '<label class="lab" for="pn">Votre numéro Orange Money ou MTN MoMo</label><input id="pn" type="tel" inputmode="tel" autocomplete="tel" placeholder="6XX XX XX XX" maxlength="20" style="width:100%;box-sizing:border-box;font-size:18px;padding:12px;margin:4px 0 6px;border:1px solid #cfcade;border-radius:10px"><p class="note" id="pnerr" style="color:#92400e;min-height:18px"></p>' +
       '<button class="btn" id="pay" data-cents="' + Math.trunc(Number(target) || 0) + '"' + (repeat ? ' data-repeat="1"' : '') + '>' +
       (repeat ? 'Payer encore ' : 'Payer ') + money(page, target) + '</button>' +
       (repeat ? '<p class="note">Vous venez déjà de payer ce montant. Si c’est voulu, touchez encore pour confirmer.</p>' : '') + '</div>';
@@ -185,7 +186,13 @@
     return fetchFn(url, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: body, referrerPolicy: 'no-referrer', cache: 'no-store' });
   }
   function request(fetchFn, t) { return post(fetchFn, FN, t); }
-  function startBody(t, cents) { return JSON.stringify({ op: 'start', t: t, amount_cents: cents }); }
+  function startBody(t, cents, payer) { return JSON.stringify({ op: 'start', t: t, amount_cents: cents, payer: payer || '' }); }
+  /* Numéro mobile guinéen : 9 chiffres commençant par 6 (avec ou sans +224). Djomy refuse un paiement sans le numéro du payeur. */
+  function cleanPayer(raw) {
+    var d = String(raw || '').replace(/\D/g, '');
+    if (d.indexOf('00224') === 0) d = d.slice(5); else if (d.indexOf('224') === 0 && d.length === 12) d = d.slice(3);
+    return /^6\d{8}$/.test(d) ? d : '';
+  }
   function checkBody(t, a) { return JSON.stringify({ op: 'check', t: t, a: a }); }
   function attemptFrom(search) { var r = new URLSearchParams(search || '').get('r') || ''; return UUID_RE.test(r) ? r : ''; }
   /* Si Djomy nous renvoie sans la partie « # », le jeton gardé sur CE téléphone au moment de « Payer ». */
@@ -206,9 +213,9 @@
     return { html: renderAttempt(page, at, { waitedMs: waitedMs, again: homeHref(t) }), done: !!FINAL[at.state] };
   }
   /* « Payer » : la page de Djomy (adresse https), ou l'état à afficher. */
-  async function startPay(fetchFn, page, t, cents) {
+  async function startPay(fetchFn, page, t, cents, payer) {
     var res = null;
-    try { res = await readJson(await post(fetchFn, FN_PAY, startBody(t, cents))); } catch (e) { res = null; }
+    try { res = await readJson(await post(fetchFn, FN_PAY, startBody(t, cents, payer))); } catch (e) { res = null; }
     if (!res) return { html: unavailable() };
     if (res.state === 'redirect' && /^https:\/\/[^/]*djomy\.africa\//.test(String(res.url)) && UUID_RE.test(String(res.attempt_id))) {
       return { go: res.url, r: res.attempt_id };
@@ -244,7 +251,7 @@
     return render(page, q.get('a'));
   }
 
-  var api = { FN_PAY: FN_PAY, startBody: startBody, checkBody: checkBody, attemptFrom: attemptFrom, remembered: remembered, checkOnce: checkOnce, startPay: startPay, STORE: STORE,
+  var api = { cleanPayer: cleanPayer, FN_PAY: FN_PAY, startBody: startBody, checkBody: checkBody, attemptFrom: attemptFrom, remembered: remembered, checkOnce: checkOnce, startPay: startPay, STORE: STORE,
     lastState: function () { return last; }, tokenFrom: tokenFrom, request: request, looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.PatronPay = api;
@@ -272,9 +279,11 @@
     var b = e.target && e.target.closest ? e.target.closest('#pay') : null;
     if (!b || b.disabled || !last) return;
     if (b.getAttribute('data-repeat') === '1') { b.removeAttribute('data-repeat'); b.textContent = 'Touchez encore pour confirmer'; return; }
+    var box = root.document.getElementById('pn'), payer = cleanPayer(box && box.value);
+    if (!payer) { var er = root.document.getElementById('pnerr'); if (er) er.textContent = 'Entrez votre numéro mobile (9 chiffres, il commence par 6).'; if (box) box.focus(); return; }
     b.disabled = true;
     b.textContent = 'Ouverture…';
-    startPay(fetchFn, last.page, last.t, Number(b.getAttribute('data-cents'))).then(function (s) {
+    startPay(fetchFn, last.page, last.t, Number(b.getAttribute('data-cents')), payer).then(function (s) {
       if (s.go) {
         try { if (storage) storage.setItem(STORE, JSON.stringify({ t: last.t, r: s.r })); } catch (er) { /* navigation privée : le # suffit */ }
         root.location.assign(s.go);

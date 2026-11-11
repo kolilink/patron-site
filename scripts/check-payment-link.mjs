@@ -184,7 +184,12 @@ check('un seul script en ligne (tout autre script serait bloqué par la CSP)', (
 const screens = [P.render(owing), P.render(owing, '40000'), P.render({ ...owing, state: 'clear', balance_cents: 0, advance_cents: 3_000_000 }),
   P.inactive(), P.unavailable(), ...['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'].map((st) => P.renderAttempt(owing, { state: st, amount_cents: 1, balance_cents: 1, min_cents: 1 })),
   ...['twice', 'advance', 'over', 'short', 'open', 'confirmed'].map((d) => P.demo(d))];
-check('aucun champ de saisie (<input>, <textarea>, <form>) nulle part : la page ne peut pas demander un code', screens.every((h) => !/<input|<textarea|<form/i.test(h)) && !/<input|<textarea|<form/i.test(html));
+// Seule exception : le numéro MOBILE du payeur (Djomy le exige), un seul champ type=tel, sur l'écran « il vous reste à régler ».
+const inputs = (h) => (h.match(/<input[^>]*>/gi) || []);
+const onlyPhone = (h) => inputs(h).every((i) => /id="pn"/.test(i) && /type="tel"/.test(i) && !/password|pin|code|otp/i.test(i.replace(/placeholder="[^"]*"/, '')));
+check('aucun champ de saisie sauf le numéro mobile (un seul, type=tel) ; jamais <textarea>/<form> ; jamais de champ code/PIN/mot de passe',
+  screens.every((h) => onlyPhone(h) && inputs(h).length <= 1 && !/<textarea|<form/i.test(h)) && !/<textarea|<form/i.test(html) && inputs(html).length === 0);
+check('seul l’écran « montant à régler » demande le numéro ; aucun écran d’état (échec, confirmé, attente…) n’a de champ', screens.filter((h) => inputs(h).length).every((h) => h.includes('id="pay"')));
 check('« Patron ne vous demandera jamais votre code secret » toujours affiché', html.includes('ne vous demandera jamais votre code secret'));
 // Chaque champ venant du serveur est échappé, sur chaque écran (une boutique ou un article piégé ne peut rien injecter).
 const evil = '"><img src=x onerror=alert(1)><script>alert(1)</script>';
