@@ -6,6 +6,8 @@
 <title>Payer · Patron</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
+<!-- SÉCURITÉ : seul notre propre code s'exécute ici (le script en ligne est autorisé par son empreinte, vérifiée par scripts/check-payment-link.mjs). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-Vjg1YS/SQqmE657B/66bZD4eWz59asR/g1LfDzTVhYA='; connect-src https://jnxpujsyvbenqgjbvifh.supabase.co; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
 <!-- Aperçu WhatsApp : générique (page statique, le robot de WhatsApp n'exécute pas de JavaScript). -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Patron">
@@ -17,10 +19,12 @@
 <link rel="preconnect" href="https://jnxpujsyvbenqgjbvifh.supabase.co" crossorigin>
 <script>
 /* VITESSE : on lance la demande des chiffres tout de suite, sans attendre que pay.js soit téléchargé.
-   pay.js reprend cette demande (window.__pay) au lieu d'en refaire une. Même règle de jeton que pay.js. */
+   pay.js reprend cette demande (window.__pay) au lieu d'en refaire une. Même règle de jeton que pay.js.
+   SÉCURITÉ : le jeton est lu après « # » (ou dans un ancien ?t=) et part dans le CORPS d'un POST, jamais dans une adresse. */
 (function () {
-  var t = new URLSearchParams(location.search).get('t') || '';
-  if (/^[A-Za-z0-9_-]{22}$/.test(t)) window.__pay = { t: t, p: fetch('https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-page?t=' + encodeURIComponent(t)).catch(function () { return null; }) };
+  var h = new URLSearchParams(location.hash.replace(/^#/, '')), q = new URLSearchParams(location.search);
+  var t = h.get('t') || q.get('t') || '';
+  if (/^[A-Za-z0-9_-]{22}$/.test(t)) window.__pay = { t: t, p: fetch('https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-page', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: t, referrerPolicy: 'no-referrer', cache: 'no-store' }).catch(function () { return null; }) };
 })();
 </script>
 <style>

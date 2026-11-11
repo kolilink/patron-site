@@ -43,10 +43,11 @@ check('inactif : une phrase générique, aucune donnée', dead.includes('n’est
 // ── chargement (fetch simulé)
 const resp = (status, body) => async () => ({ status, json: async () => body });
 const seen = [];
-const spy = (f) => (u) => { seen.push(u); return f(u); };
+const inits = [];
+const spy = (f) => (u, init) => { seen.push(u); inits.push(init); return f(u, init); };
 check('jeton mal formé : jamais envoyé au serveur', (await P.loadAndRender(spy(resp(200, owing)), '?t=abc')).includes('Lien inactif') && seen.length === 0);
 check('sans jeton : lien inactif', (await P.loadAndRender(spy(resp(200, owing)), '')).includes('Lien inactif') && seen.length === 0);
-check('bon jeton : appelle la fonction avec le jeton', (await P.loadAndRender(spy(resp(200, owing)), `?t=${TOKEN}&a=40000`)).includes('Boutique Mariama') && seen[0] === `${P.FN}?t=${TOKEN}`);
+check('ancien lien ?t= : marche encore, et le jeton part dans le CORPS, pas dans l’adresse', (await P.loadAndRender(spy(resp(200, owing)), `?t=${TOKEN}&a=40000`)).includes('Boutique Mariama') && seen[0] === P.FN && inits[0].method === 'POST' && inits[0].body === TOKEN);
 check('lien inconnu / désactivé : lien inactif', (await P.loadAndRender(resp(200, { state: 'inactive' }), `?t=${TOKEN}`)).includes('Lien inactif'));
 for (const s of [429, 500, 503]) check(`serveur ${s} : « Pas de connexion » + Réessayer`, (await P.loadAndRender(resp(s, {}), `?t=${TOKEN}`)).includes('Réessayer'));
 check('réseau coupé : « Pas de connexion », sans exception', (await P.loadAndRender(async () => { throw new Error('x'); }, `?t=${TOKEN}`)).includes('Pas de connexion'));
@@ -111,6 +112,40 @@ for (const d of ['twice', 'advance', 'over', 'short']) {
   const h = await P.loadAndRender(async () => { throw new Error('jamais'); }, `?demo=${d}`);
   check(`démo « ${d} » : EXEMPLE, boutique fictive, aucun appel réseau`, h.includes('EXEMPLE') && h.includes('Boutique Exemple') && !/Mariama|Aminata/.test(h));
 }
+
+// ── SÉCURITÉ (couche 8)
+const crypto = await import('node:crypto');
+check('nouveau lien #t= : lu après « # », envoyé en POST text/plain, l’adresse appelée ne contient jamais le jeton', await (async () => {
+  seen.length = 0; inits.length = 0;
+  const h = await P.loadAndRender(spy(resp(200, owing)), '', `#t=${TOKEN}`);
+  return h.includes('Boutique Mariama') && seen.length === 1 && !seen[0].includes(TOKEN) && inits[0].method === 'POST'
+    && inits[0].body === TOKEN && inits[0].headers['content-type'] === 'text/plain' && inits[0].referrerPolicy === 'no-referrer';
+})());
+check('« # » gagne sur « ? » ; un jeton mal formé après « # » ne part jamais', P.tokenFrom(`?t=${'a'.repeat(22)}`, `#t=${TOKEN}`) === TOKEN && await (async () => {
+  seen.length = 0; const h = await P.loadAndRender(spy(resp(200, owing)), '', '#t=abc'); return h.includes('Lien inactif') && seen.length === 0;
+})());
+check('aucune adresse construite par la page ne contient « ?t= » (le jeton n’est jamais dans une URL de requête)', !/FN \+ '\?t='|payment-page\?t=/.test(js + html));
+const inline = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const sha = crypto.createHash('sha256').update(inline, 'utf8').digest('base64');
+const csp = (html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1] || '';
+check('CSP présente : rien par défaut, nos scripts seulement, seule la fonction Supabase joignable', /default-src 'none'/.test(csp) && /script-src 'self' 'sha256-/.test(csp) && /connect-src https:\/\/jnxpujsyvbenqgjbvifh\.supabase\.co;/.test(csp) && /base-uri 'none'/.test(csp) && /form-action 'none'/.test(csp));
+check('CSP : l’empreinte autorise EXACTEMENT le script en ligne actuel (sinon la page casse en silence)', csp.includes(`'sha256-${sha}'`));
+check('CSP : jamais unsafe-inline / unsafe-eval pour les scripts', !/script-src[^;]*unsafe/.test(csp));
+check('un seul script en ligne (tout autre script serait bloqué par la CSP)', (html.match(/<script>/g) || []).length === 1);
+// La page ne demande JAMAIS un code secret : aucun champ de saisie, sur aucun écran, y compris les démos.
+const screens = [P.render(owing), P.render(owing, '40000'), P.render({ ...owing, state: 'clear', balance_cents: 0, advance_cents: 3_000_000 }),
+  P.inactive(), P.unavailable(), ...['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'].map((st) => P.renderAttempt(owing, { state: st, amount_cents: 1, balance_cents: 1, min_cents: 1 })),
+  ...['twice', 'advance', 'over', 'short', 'open', 'confirmed'].map((d) => P.demo(d))];
+check('aucun champ de saisie (<input>, <textarea>, <form>) nulle part : la page ne peut pas demander un code', screens.every((h) => !/<input|<textarea|<form/i.test(h)) && !/<input|<textarea|<form/i.test(html));
+check('« Patron ne vous demandera jamais votre code secret » toujours affiché', html.includes('ne vous demandera jamais votre code secret'));
+// Chaque champ venant du serveur est échappé, sur chaque écran (une boutique ou un article piégé ne peut rien injecter).
+const evil = '"><img src=x onerror=alert(1)><script>alert(1)</script>';
+const hostile = { ...owing, shop_name: evil, first_name: evil, currency: evil, last_lines: [{ date: evil, item: evil, amount_cents: 1 }],
+  recent_payment: { amount_cents: 1, minutes_ago: evil } };
+const hostileScreens = [P.render(hostile), P.render({ ...hostile, state: 'clear', advance_cents: 5 }),
+  ...['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'].map((st) => P.renderAttempt(hostile, { state: st, reason: evil, amount_cents: 1, balance_cents: 1, min_cents: 1, advance_cents: 1 }))];
+check('valeurs hostiles échappées sur TOUS les écrans (boutique, prénom, devise, article, date, raison, minutes)', hostileScreens.every((h) => !/<img|<script/i.test(h)));
+check('« il y a N min » : un texte hostile devient un nombre', P.agoText('<b>') === 'à l’instant' && P.agoText('7') === 'il y a 7 min' && P.agoText(-3) === 'à l’instant');
 
 if (failures) { console.error(`\n${failures} vérification(s) en échec`); process.exit(1); }
 console.log('\ntout est vert');
