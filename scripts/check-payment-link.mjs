@@ -54,7 +54,7 @@ check('réseau coupé : « Pas de connexion », sans exception', (await P.loadAn
 check('réponse illisible : « Pas de connexion »', (await P.loadAndRender(async () => ({ status: 200, json: async () => { throw new Error('x'); } }), `?t=${TOKEN}`)).includes('Pas de connexion'));
 
 // ── vitesse : la demande part dès le HTML, pay.js la reprend
-check('index.html lance la demande des chiffres avant pay.js, avec le même jeton et la même adresse', html.indexOf('window.__pay') > -1 && html.indexOf('window.__pay') < html.indexOf('<script src="/p/pay.js">') && html.includes(P.FN) && html.includes('^[A-Za-z0-9_-]{22}$'));
+check('index.html lance la demande des chiffres avant pay.js, avec le même jeton et la même adresse', html.indexOf('window.__pay') > -1 && html.indexOf('window.__pay') < html.indexOf('<script src="/p/pay.js') && html.includes(P.FN) && html.includes('^[A-Za-z0-9_-]{22}$'));
 globalThis.__pay = { t: TOKEN, p: Promise.resolve({ status: 200, json: async () => owing }) };
 let called = 0;
 check('pay.js reprend la demande anticipée : aucune 2e demande', (await P.loadAndRender(async () => { called += 1; return { status: 200, json: async () => owing }; }, `?t=${TOKEN}`)).includes('Boutique Mariama') && called === 0);
