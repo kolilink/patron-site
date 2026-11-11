@@ -142,7 +142,9 @@
         body = '<p class="sub">Tout est réglé. Merci pour votre confiance.</p>';
         break;
       case 'invalid':
-        body = '<p class="sub">Ce montant ne peut pas être payé en ligne.</p>' + again;
+        body = at.reason === 'payer'
+          ? '<p class="sub">Ce numéro n’est pas valide. Entrez un numéro mobile guinéen Orange Money ou MTN MoMo (9 chiffres, il commence par 6).</p>' + again
+          : '<p class="sub">Ce montant ne peut pas être payé en ligne.</p>' + again;
         break;
       default:
         return inactive();
