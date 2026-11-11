@@ -48,7 +48,8 @@
     return '<div class="card"><h1>Pas de connexion</h1><p class="sub">Réessayez dans un instant.</p><a class="btn" href="">Réessayer</a></div>';
   }
   /* « il y a 3 min » — pour dire au client ce qu'il a déjà payé. */
-  function agoText(min) { return min < 1 ? 'à l’instant' : 'il y a ' + min + ' min'; }
+  /* Forcé en nombre entier : jamais un texte venu du serveur inséré tel quel dans la page. */
+  function agoText(min) { var m = Math.max(0, Math.floor(Number(min) || 0)); return m < 1 ? 'à l’instant' : 'il y a ' + m + ' min'; }
   /* Un second paiement du MÊME montant juste après un paiement confirmé ressemble à un doublon : on demande une fois. */
   function looksLikeRepeat(page, targetCents) {
     var r = page && page.recent_payment;
@@ -154,19 +155,31 @@
     return renderAttempt(DEMO_PAGE, { state: name, reason: reason || 'insufficient_funds', amount_cents: 4000000, balance_cents: 4500000, min_cents: 100000 },
       { demo: true, waitedMs: 0 });
   }
-  /* search = location.search. Retourne le HTML à afficher ; ne lance jamais d'exception. */
-  async function loadAndRender(fetchFn, search) {
+  /* SÉCURITÉ (couche 8) : le jeton vit APRÈS « # » dans l'adresse (#t=…). Un navigateur n'envoie jamais cette partie à
+     un serveur : ni GitHub Pages, ni Supabase, ni un proxy, ni un en-tête Referer ne la voient. Les anciens liens ?t=…
+     marchent encore. Dans les deux cas, le jeton part dans le CORPS d'une requête POST, jamais dans une adresse. */
+  function tokenFrom(search, hash) {
+    var h = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    var q = new URLSearchParams(search || '');
+    return h.get('t') || q.get('t') || '';
+  }
+  /* Une seule façon d'appeler la fonction : POST, text/plain (requête « simple » : pas d'aller-retour CORS de plus en 2G). */
+  function request(fetchFn, t) {
+    return fetchFn(FN, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: t, referrerPolicy: 'no-referrer', cache: 'no-store' });
+  }
+  /* search = location.search, hash = location.hash. Retourne le HTML à afficher ; ne lance jamais d'exception. */
+  async function loadAndRender(fetchFn, search, hash) {
     var q = new URLSearchParams(search || '');
     var d = q.get('demo') ? demo(q.get('demo'), q.get('reason')) : null;
     if (d) return d;
-    var t = q.get('t') || '';
+    var t = tokenFrom(search, hash);
     if (!TOKEN_RE.test(t)) return inactive();                 // un jeton mal formé ne part jamais au serveur
     var res;
     try {
       // la demande a déjà été lancée par index.html (même jeton) : on la reprend au lieu d'en refaire une
       var early = root.__pay && root.__pay.t === t ? root.__pay.p : null;
       res = early ? await early : null;
-      if (!res) res = await fetchFn(FN + '?t=' + encodeURIComponent(t));   // pas de demande anticipée, ou elle a échoué : une seule reprise
+      if (!res) res = await request(fetchFn, t);   // pas de demande anticipée, ou elle a échoué : une seule reprise
     } catch (e) { return unavailable(); }
     if (!res || res.status === 429 || res.status >= 500) return unavailable();
     var page;
@@ -174,9 +187,9 @@
     return render(page, q.get('a'));
   }
 
-  var api = { looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
+  var api = { tokenFrom: tokenFrom, request: request, looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.PatronPay = api;
   var app = root.document && root.document.getElementById('app');
-  if (app) loadAndRender(function (u) { return root.fetch(u); }, root.location.search).then(function (h) { app.innerHTML = h; });
+  if (app) loadAndRender(function (u, init) { return root.fetch(u, init); }, root.location.search, root.location.hash).then(function (h) { app.innerHTML = h; });
 })(typeof window !== 'undefined' ? window : globalThis);
