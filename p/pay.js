@@ -1,11 +1,16 @@
-/* Page de paiement — patron.kolilink.com/p/?t=<jeton>
+/* Page de paiement — patron.kolilink.com/p/#t=<jeton>
  * Statique (GitHub Pages) : le navigateur demande les chiffres EN DIRECT à la fonction Supabase
- * `payment-page`. Aucune donnée privée dans ce fichier. Le bouton « Payer » reste inactif tant que
- * le paiement en ligne n'est pas ouvert. Même code testé par scripts/check-payment-link.mjs. */
+ * `payment-page`. Aucune donnée privée dans ce fichier. « Payer » demande une page de paiement à Djomy
+ * (fonction `payment-pay`), qui demande le numéro et le moyen (Orange Money, MTN MoMo, PayCard). Au retour
+ * (?r=<tentative>#t=<jeton>), la page demande à NOTRE serveur si Djomy a confirmé — l'adresse de retour ne
+ * prouve rien. Même code testé par scripts/check-payment-link.mjs. */
 (function (root) {
   'use strict';
   var FN = 'https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-page';
+  var FN_PAY = 'https://jnxpujsyvbenqgjbvifh.supabase.co/functions/v1/payment-pay';
   var TOKEN_RE = /^[A-Za-z0-9_-]{22}$/;
+  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var STORE = 'patron_pay';
   var NB = ' ';
 
   function esc(s) {
@@ -80,9 +85,9 @@
       '<p class="lab">Il vous reste à régler</p><p class="big">' + formatAmount(page.balance_cents, page.decimals) + ' <small>' + esc(page.currency) + '</small></p>' +
       (ask ? '<p class="ask">' + shop + ' vous propose de régler ' + money(page, ask) + ' aujourd’hui. <a href="">Tout régler</a></p>' : '') +
       (lines ? '<ul>' + lines + '</ul>' : '') + methods() +
-      '<button class="btn" disabled>' + (repeat ? 'Payer encore ' : 'Payer ') + money(page, target) + '</button>' +
-      (repeat ? '<p class="note">Vous venez déjà de payer ce montant. Si c’est voulu, touchez encore pour confirmer.</p>' : '') +
-      '<p class="note">Le paiement en ligne s’ouvre bientôt pour cette boutique.</p></div>';
+      '<button class="btn" id="pay" data-cents="' + Math.trunc(Number(target) || 0) + '"' + (repeat ? ' data-repeat="1"' : '') + '>' +
+      (repeat ? 'Payer encore ' : 'Payer ') + money(page, target) + '</button>' +
+      (repeat ? '<p class="note">Vous venez déjà de payer ce montant. Si c’est voulu, touchez encore pour confirmer.</p>' : '') + '</div>';
   }
   /* ── Les états d'une tentative de paiement (migration_v276). Seul « confirmed » a bougé de l'argent. ── */
   var REASONS = {
@@ -97,7 +102,7 @@
     var shop = esc(page.shop_name), amt = at.amount_cents != null ? money(page, at.amount_cents) : '';
     var banner = o.demo ? '<p class="demo">EXEMPLE · aucun paiement réel</p>' : '';
     var head = banner + '<h1>' + shop + '</h1>';
-    var again = '<a class="btn" href="">Réessayer</a>';
+    var again = '<a class="btn" href="' + esc(o.again || '') + '">Réessayer</a>';
     var verify = '<a class="btn" href="">Vérifier</a>';
     var body;
     switch (at.state) {
@@ -126,6 +131,18 @@
         break;
       case 'too_low':
         body = '<p class="sub">Minimum ' + money(page, at.min_cents) + ' par paiement.</p>';
+        break;
+      case 'too_high':
+        body = '<p class="sub">Le montant à régler a changé.</p>' + again;
+        break;
+      case 'rate_limited':
+        body = '<p class="sub">Trop d’essais pour le moment. Réessayez dans une heure.</p>';
+        break;
+      case 'clear':
+        body = '<p class="sub">Tout est réglé. Merci pour votre confiance.</p>';
+        break;
+      case 'invalid':
+        body = '<p class="sub">Ce montant ne peut pas être payé en ligne.</p>' + again;
         break;
       default:
         return inactive();
@@ -163,16 +180,50 @@
     var q = new URLSearchParams(search || '');
     return h.get('t') || q.get('t') || '';
   }
-  /* Une seule façon d'appeler la fonction : POST, text/plain (requête « simple » : pas d'aller-retour CORS de plus en 2G). */
-  function request(fetchFn, t) {
-    return fetchFn(FN, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: t, referrerPolicy: 'no-referrer', cache: 'no-store' });
+  /* Une seule façon d'appeler nos fonctions : POST, text/plain (requête « simple » : pas d'aller-retour CORS de plus en 2G). */
+  function post(fetchFn, url, body) {
+    return fetchFn(url, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: body, referrerPolicy: 'no-referrer', cache: 'no-store' });
   }
+  function request(fetchFn, t) { return post(fetchFn, FN, t); }
+  function startBody(t, cents) { return JSON.stringify({ op: 'start', t: t, amount_cents: cents }); }
+  function checkBody(t, a) { return JSON.stringify({ op: 'check', t: t, a: a }); }
+  function attemptFrom(search) { var r = new URLSearchParams(search || '').get('r') || ''; return UUID_RE.test(r) ? r : ''; }
+  /* Si Djomy nous renvoie sans la partie « # », le jeton gardé sur CE téléphone au moment de « Payer ». */
+  function remembered(storage, r) {
+    try { var s = JSON.parse((storage && storage.getItem(STORE)) || 'null'); return s && s.r === r && TOKEN_RE.test(s.t) ? s.t : ''; } catch (e) { return ''; }
+  }
+  function homeHref(t) { return '/p/#t=' + t; }
+  async function readJson(res) {
+    if (!res || res.status === 429 || res.status >= 500) return null;
+    try { return await res.json(); } catch (e) { return null; }
+  }
+  var FINAL = { confirmed: 1, failed: 1, inactive: 1 };
+  /* Retour de Djomy : on demande à NOTRE serveur où en est la tentative. Un réseau qui hoquette = on attend encore. */
+  async function checkOnce(fetchFn, page, t, r, waitedMs) {
+    var at = null;
+    try { at = await readJson(await post(fetchFn, FN_PAY, checkBody(t, r))); } catch (e) { at = null; }
+    if (!at) return { html: renderAttempt(page, { state: 'open' }, { waitedMs: waitedMs, again: homeHref(t) }), done: false };
+    return { html: renderAttempt(page, at, { waitedMs: waitedMs, again: homeHref(t) }), done: !!FINAL[at.state] };
+  }
+  /* « Payer » : la page de Djomy (adresse https), ou l'état à afficher. */
+  async function startPay(fetchFn, page, t, cents) {
+    var res = null;
+    try { res = await readJson(await post(fetchFn, FN_PAY, startBody(t, cents))); } catch (e) { res = null; }
+    if (!res) return { html: unavailable() };
+    if (res.state === 'redirect' && /^https:\/\/[^/]*djomy\.africa\//.test(String(res.url)) && UUID_RE.test(String(res.attempt_id))) {
+      return { go: res.url, r: res.attempt_id };
+    }
+    return { html: renderAttempt(page, res, { again: homeHref(t) }) };
+  }
+  var last = null;
   /* search = location.search, hash = location.hash. Retourne le HTML à afficher ; ne lance jamais d'exception. */
-  async function loadAndRender(fetchFn, search, hash) {
+  async function loadAndRender(fetchFn, search, hash, storage) {
     var q = new URLSearchParams(search || '');
     var d = q.get('demo') ? demo(q.get('demo'), q.get('reason')) : null;
     if (d) return d;
     var t = tokenFrom(search, hash);
+    var r = attemptFrom(search);
+    if (!TOKEN_RE.test(t) && r) t = remembered(storage, r);
     if (!TOKEN_RE.test(t)) return inactive();                 // un jeton mal formé ne part jamais au serveur
     var res;
     try {
@@ -184,12 +235,52 @@
     if (!res || res.status === 429 || res.status >= 500) return unavailable();
     var page;
     try { page = await res.json(); } catch (e) { return unavailable(); }
+    last = { page: page, t: t, r: '', done: true };
+    if (r && page && (page.state === 'owing' || page.state === 'clear')) {
+      var c = await checkOnce(fetchFn, page, t, r, 0);
+      last.r = r; last.done = c.done;
+      return c.html;
+    }
     return render(page, q.get('a'));
   }
 
-  var api = { tokenFrom: tokenFrom, request: request, looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
+  var api = { FN_PAY: FN_PAY, startBody: startBody, checkBody: checkBody, attemptFrom: attemptFrom, remembered: remembered, checkOnce: checkOnce, startPay: startPay, STORE: STORE,
+    lastState: function () { return last; }, tokenFrom: tokenFrom, request: request, looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.PatronPay = api;
   var app = root.document && root.document.getElementById('app');
-  if (app) loadAndRender(function (u, init) { return root.fetch(u, init); }, root.location.search, root.location.hash).then(function (h) { app.innerHTML = h; });
+  if (!app) return;
+  var fetchFn = function (u, init) { return root.fetch(u, init); };
+  var storage = null;
+  try { storage = root.localStorage; } catch (e) { storage = null; }
+  var t0 = Date.now();
+  /* Au retour de Djomy : on redemande toutes les 3 s pendant 2 min, puis « Vérifier » (qui recharge et reprend). */
+  function poll() {
+    setTimeout(function () {
+      var w = Date.now() - t0;
+      checkOnce(fetchFn, last.page, last.t, last.r, w).then(function (c) {
+        app.innerHTML = c.html;
+        if (!c.done && w < 120000) poll();
+      });
+    }, 3000);
+  }
+  loadAndRender(fetchFn, root.location.search, root.location.hash, storage).then(function (h) {
+    app.innerHTML = h;
+    if (last && last.r && !last.done) poll();
+  });
+  app.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('#pay') : null;
+    if (!b || b.disabled || !last) return;
+    if (b.getAttribute('data-repeat') === '1') { b.removeAttribute('data-repeat'); b.textContent = 'Touchez encore pour confirmer'; return; }
+    b.disabled = true;
+    b.textContent = 'Ouverture…';
+    startPay(fetchFn, last.page, last.t, Number(b.getAttribute('data-cents'))).then(function (s) {
+      if (s.go) {
+        try { if (storage) storage.setItem(STORE, JSON.stringify({ t: last.t, r: s.r })); } catch (er) { /* navigation privée : le # suffit */ }
+        root.location.assign(s.go);
+        return;
+      }
+      app.innerHTML = s.html;
+    });
+  });
 })(typeof window !== 'undefined' ? window : globalThis);
