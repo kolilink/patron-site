@@ -93,5 +93,24 @@ for (const s of ['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low']) {
 check('démo inconnue : ignorée (jeton absent = lien inactif)', (await P.loadAndRender(resp(200, owing), '?demo=hack')).includes('Lien inactif'));
 check('les phrases de la page ont un seul ton : aucun mot d’alerte (« erreur », « échoué », « impayé »)', !/erreur|échoué|impay/i.test(Object.values(P.REASONS).join(' ') + at('failed') + at('expired')));
 
+// ── ce que la page dit d'un paiement déjà fait (v278) : plus de doublon par doute
+const recent = { ...owing, balance_cents: 4_500_000, recent_payment: { amount_cents: 4_000_000, minutes_ago: 3 }, advance_cents: 0 };
+check('paiement récent : « Vous avez payé 40 000 GNF il y a 3 min ✓ » en tête', P.render(recent).includes(`Vous avez payé 40${NB}000 GNF il y a 3 min ✓`));
+check('à l’instant si moins d’une minute', P.agoText(0) === 'à l’instant' && P.agoText(7) === 'il y a 7 min');
+check('même montant qu’il vient de payer : « Payer encore » + une phrase, jamais un refus', P.render(recent, '40000').includes('Payer encore') && P.render(recent, '40000').includes('touchez encore pour confirmer'));
+check('autre montant : bouton normal, pas d’avertissement', !P.render(recent).includes('Payer encore') && !P.render(recent, '10000').includes('touchez encore'));
+check('rien payé récemment : aucune ligne « Vous avez payé »', !P.render(owing).includes('Vous avez payé'));
+check('looksLikeRepeat tolère l’absence de donnée', P.looksLikeRepeat(null, 5) === false && P.looksLikeRepeat({}, 5) === false && P.looksLikeRepeat({ recent_payment: { amount_cents: '5' } }, 5) === true);
+const adv = P.render({ ...owing, state: 'clear', balance_cents: 0, advance_cents: 3_000_000, recent_payment: null });
+check('avance : jamais « Tout est réglé », mais l’avance et ce qu’on en fait', adv.includes(`avance de 3${NB}000${NB}000`.replace(`3${NB}000${NB}000`, `30${NB}000`)) && adv.includes('déduite de votre prochain achat') && !adv.includes('Tout est réglé'));
+const rec = (extra) => P.renderAttempt(owing, { state: 'confirmed', amount_cents: 8_500_000, confirmed_cents: 8_500_000, balance_cents: 0, advance_cents: 0, ...extra });
+check('reçu : le montant CONFIRMÉ, pas le montant demandé', rec({ confirmed_cents: 8_400_000, balance_cents: 100_000 }).includes(`84${NB}000`) && !rec({ confirmed_cents: 8_400_000, balance_cents: 100_000 }).includes(`85${NB}000 GNF</p>`));
+check('reçu trop payé : la phrase de l’avance', rec({ advance_cents: 3_000_000 }).includes('déduite de votre prochain achat'));
+check('reçu soldé : « Vous ne devez plus rien »', rec({}).includes('Vous ne devez plus rien'));
+for (const d of ['twice', 'advance', 'over', 'short']) {
+  const h = await P.loadAndRender(async () => { throw new Error('jamais'); }, `?demo=${d}`);
+  check(`démo « ${d} » : EXEMPLE, boutique fictive, aucun appel réseau`, h.includes('EXEMPLE') && h.includes('Boutique Exemple') && !/Mariama|Aminata/.test(h));
+}
+
 if (failures) { console.error(`\n${failures} vérification(s) en échec`); process.exit(1); }
 console.log('\ntout est vert');

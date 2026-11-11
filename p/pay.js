@@ -47,22 +47,40 @@
   function unavailable() {
     return '<div class="card"><h1>Pas de connexion</h1><p class="sub">Réessayez dans un instant.</p><a class="btn" href="">Réessayer</a></div>';
   }
+  /* « il y a 3 min » — pour dire au client ce qu'il a déjà payé. */
+  function agoText(min) { return min < 1 ? 'à l’instant' : 'il y a ' + min + ' min'; }
+  /* Un second paiement du MÊME montant juste après un paiement confirmé ressemble à un doublon : on demande une fois. */
+  function looksLikeRepeat(page, targetCents) {
+    var r = page && page.recent_payment;
+    return !!(r && Number(r.amount_cents) === Number(targetCents));
+  }
+  function recentLine(page) {
+    var r = page.recent_payment;
+    return r ? '<p class="ok2">Vous avez payé ' + money(page, r.amount_cents) + ' ' + agoText(r.minutes_ago) + ' ✓</p>' : '';
+  }
+  function advanceText(page, shop) {
+    return 'Vous avez une avance de ' + money(page, page.advance_cents) + ' chez ' + shop + '. Elle sera déduite de votre prochain achat, ou rendue par la boutique.';
+  }
   function render(page, a) {
     if (!page || (page.state !== 'owing' && page.state !== 'clear')) return inactive();
     var name = esc(page.first_name), shop = esc(page.shop_name);
     if (page.state === 'clear') {
-      return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p><p class="big" style="font-size:22px">Tout est réglé. Merci pour votre confiance.</p></div>';
+      var msg = page.advance_cents > 0 ? advanceText(page, shop) : 'Tout est réglé. Merci pour votre confiance.';
+      return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p>' + recentLine(page) +
+        '<p class="big" style="font-size:22px">' + msg + '</p></div>';
     }
     var ask = requestedCents(page, a);
     var lines = (page.last_lines || []).map(function (l) {
       return '<li><span>' + esc(l.date) + (l.item ? ' · ' + esc(l.item) : '') + '</span><span>' + money(page, l.amount_cents) + '</span></li>';
     }).join('');
     var target = ask || page.balance_cents;
-    return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p>' +
+    var repeat = looksLikeRepeat(page, target);
+    return '<div class="card"><h1>' + shop + '</h1><p class="sub">Bonjour ' + name + '</p>' + recentLine(page) +
       '<p class="lab">Il vous reste à régler</p><p class="big">' + formatAmount(page.balance_cents, page.decimals) + ' <small>' + esc(page.currency) + '</small></p>' +
       (ask ? '<p class="ask">' + shop + ' vous propose de régler ' + money(page, ask) + ' aujourd’hui. <a href="">Tout régler</a></p>' : '') +
       (lines ? '<ul>' + lines + '</ul>' : '') + methods() +
-      '<button class="btn" disabled>Payer ' + money(page, target) + '</button>' +
+      '<button class="btn" disabled>' + (repeat ? 'Payer encore ' : 'Payer ') + money(page, target) + '</button>' +
+      (repeat ? '<p class="note">Vous venez déjà de payer ce montant. Si c’est voulu, touchez encore pour confirmer.</p>' : '') +
       '<p class="note">Le paiement en ligne s’ouvre bientôt pour cette boutique.</p></div>';
   }
   /* ── Les états d'une tentative de paiement (migration_v276). Seul « confirmed » a bougé de l'argent. ── */
@@ -87,8 +105,12 @@
           ((o.waitedMs || 0) >= 120000 ? verify : '<p class="note">En attente de votre confirmation…</p>');
         break;
       case 'confirmed':
-        body = '<p class="ok">Paiement reçu ✓</p><p class="big">' + amt + '</p>' +
-          '<p class="sub">' + (at.balance_cents > 0 ? 'Il vous reste ' + money(page, at.balance_cents) + '.' : 'Vous ne devez plus rien à ' + shop + '. Merci !') + '</p>' +
+        /* Le reçu dit EXACTEMENT ce qui a été reçu (le montant confirmé), jamais le montant demandé. */
+        var got = at.confirmed_cents != null ? money(page, at.confirmed_cents) : amt;
+        var left = at.advance_cents > 0 ? advanceText({ currency: page.currency, decimals: page.decimals, advance_cents: at.advance_cents }, shop)
+          : at.balance_cents > 0 ? 'Il vous reste ' + money(page, at.balance_cents) + '.'
+          : 'Vous ne devez plus rien à ' + shop + '. Merci !';
+        body = '<p class="ok">Paiement reçu ✓</p><p class="big">' + got + '</p><p class="sub">' + left + '</p>' +
           '<p class="note">Faites une capture d’écran pour garder ce reçu.</p>';
         break;
       case 'failed':
@@ -113,6 +135,21 @@
   var DEMO_PAGE = { shop_name: 'Boutique Exemple', first_name: 'Client', currency: 'GNF', decimals: 0 };
   function demo(name, reason) {
     var states = ['open', 'confirmed', 'failed', 'expired', 'busy', 'too_low'];
+    var banner = '<p class="demo">EXEMPLE · aucun paiement réel</p>';
+    if (name === 'twice') {   /* il vient de payer 40 000 ; la page l'accueille avec « Vous avez payé… » */
+      return banner + render({ state: 'owing', shop_name: 'Boutique Exemple', first_name: 'Client', currency: 'GNF', decimals: 0, balance_cents: 4500000,
+        recent_payment: { amount_cents: 4000000, minutes_ago: 3 }, last_lines: [] }, '40000');
+    }
+    if (name === 'advance') {
+      return banner + render({ state: 'clear', shop_name: 'Boutique Exemple', first_name: 'Client', currency: 'GNF', decimals: 0, balance_cents: 0, advance_cents: 3000000,
+        recent_payment: { amount_cents: 8500000, minutes_ago: 1 }, last_lines: [] });
+    }
+    if (name === 'over') {
+      return renderAttempt(DEMO_PAGE, { state: 'confirmed', amount_cents: 8500000, confirmed_cents: 8500000, balance_cents: 0, advance_cents: 3000000 }, { demo: true });
+    }
+    if (name === 'short') {
+      return renderAttempt(DEMO_PAGE, { state: 'confirmed', amount_cents: 8500000, confirmed_cents: 8400000, balance_cents: 100000, advance_cents: 0 }, { demo: true });
+    }
     if (states.indexOf(name) < 0) return null;
     return renderAttempt(DEMO_PAGE, { state: name, reason: reason || 'insufficient_funds', amount_cents: 4000000, balance_cents: 4500000, min_cents: 100000 },
       { demo: true, waitedMs: 0 });
@@ -137,7 +174,7 @@
     return render(page, q.get('a'));
   }
 
-  var api = { renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
+  var api = { looksLikeRepeat: looksLikeRepeat, agoText: agoText, renderAttempt: renderAttempt, demo: demo, REASONS: REASONS, formatAmount: formatAmount, requestedCents: requestedCents, render: render, inactive: inactive, unavailable: unavailable, loadAndRender: loadAndRender, esc: esc, FN: FN };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.PatronPay = api;
   var app = root.document && root.document.getElementById('app');
