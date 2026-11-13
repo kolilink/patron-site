@@ -158,6 +158,22 @@
             opacity: .75;
         }
 
+        /* Le repli WhatsApp : un lien texte sous les boutons, pas un
+           troisième bouton — l'installation reste la seule grande action. */
+        .wa {
+            font-size: 15px;
+            line-height: 1.5;
+            margin: 18px 0 0;
+            opacity: .92;
+        }
+
+        .wa a {
+            color: #fff;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
         /* La preuve, en bas : elle s'installe en fondu, sans jamais
            voyager. Le nombre est vérifié à chaque publication du site
            (commerces réels, comptes de test exclus) et épinglé par la
@@ -248,7 +264,8 @@
 <body>
     <div class="card">
         <h1 id="title">Patron</h1>
-        <p class="tagline">Note qui te doit, même sans internet.</p>
+        <p class="lede">Votre argent vous attend.</p>
+        <p class="tagline">Notez qui vous doit, même sans internet.</p>
 
         <div id="stores">
             <a class="btn btn-primary" id="store-ios" href="https://apps.apple.com/us/app/patron/id6772757310"
@@ -276,6 +293,8 @@
                 w.classList.add('ready');
             })();
         </script>
+
+        <p class="wa">Pas envie d'installer maintenant ? <a href="https://wa.me/16094454809">Écrivez-nous sur WhatsApp</a>. On vous répond vite. On vous aide à récupérer votre argent.</p>
 
         <div class="proof"><strong><span id="shop-count" class="num">215</span> vendeurs</strong> déjà sur Patron</div>
 
