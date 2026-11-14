@@ -29,9 +29,10 @@ contains('promesse', html, '<p class="lede">Votre argent vous attend</p>');
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
 contains('signature', html, '<div class="foot">Vous le méritez et vous ne payez rien</div>');
-// Le nombre figé est réécrit chaque jour par refresh-shop-count : on vérifie
-// qu'il existe, pas sa valeur.
-matches('preuve (repli du nombre figé présent)', html, /<span id="shop-count" class="num">[1-9]\d*<\/span> vendeurs<\/strong> déjà sur Patron/);
+// Le nombre affiché est UNIQUEMENT celui lu en direct : la ligne naît
+// invisible, sans nombre réel, et aucun repli ne peut écraser le direct.
+contains('preuve : ligne invisible tant que le direct n\'a pas répondu', html, '<div class="proof pending" id="proof"><strong><span id="shop-count" class="num">0</span> vendeurs</strong> déjà sur Patron</div>');
+notMatches('preuve : aucun repli figé (ni minuterie, ni « baked »)', html, /baked|__rollProof|showCount/);
 contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
 matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' vous invite sur Patron'/);
 notMatches('anciennes accroches absentes', html, /On t'invite sur Patron|Ton carnet|Note chaque vente|et fait pour les vendeurs/);
