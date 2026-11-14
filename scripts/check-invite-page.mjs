@@ -56,8 +56,9 @@ notMatches('jamais le presse-papiers', html, /clipboard|execCommand/i);
 // La carte sociale (source de invite/og.png) : les textes exacts, jamais « boutique », plus l'ancienne accroche.
 // Même règle que la page : aucun point en fin de phrase.
 contains('carte : marque', card, '<div class="brand">Patron</div>');
-contains('carte : titre', card, '<div class="tagline">Ton commerce, dans ta poche.</div>');
-contains('carte : gratuit', card, '<div class="sub">Gratuit.</div>');
+contains('carte : titre', card, '<div class="tagline">Votre argent vous attend.</div>');
+contains('carte : signature', card, '<div class="sub">Vous le méritez et vous ne payez rien.</div>');
+notMatches('carte : vouvoiement, jamais « tu » ni « cadeau »', card, /Ton commerce|dans ta poche|Note qui te doit|même sans internet|>Gratuit\.<|cadeau/i);
 notMatches('carte : anciennes accroches retirées', card, /Ton carnet|Note chaque vente|et fait pour les vendeurs/);
 notMatches('carte : ancienne accroche retirée', card, /Plus de page perdue/);
 notMatches('carte : jamais « boutique » (toute vendeuse n\u2019a pas de boutique)', card, /boutique/i);
