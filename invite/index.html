@@ -82,25 +82,28 @@
         }
 
         h1 {
-            /* Une seule ligne, quoi qu'il arrive : pas de retour à la
-               ligne, taille liée à l'écran, et le script réduit encore
-               si le nom est long. Aucun point en fin de phrase. */
-            font-size: clamp(18px, 6.1vw, 26px);
+            /* Le contexte, pas le titre : la personne qui invite (ou
+               « Patron » sans invitée) s'écrit petit, au-dessus de la
+               promesse. Une seule ligne, taille liée à l'écran, et le
+               script réduit encore si le nom est long. */
+            font-size: clamp(14px, 4.2vw, 16px);
             white-space: nowrap;
             line-height: 1.25;
-            margin: 0 0 12px;
-            font-weight: 700;
+            margin: 0 0 8px;
+            font-weight: 600;
+            opacity: .9;
             /* La place de la ligne est réservée dès le départ : si le nom
-               arrive après la révélation de la carte, il n'échange que
-               les mots, dans la même ligne — rien ne bouge. */
+               arrive après, il n'échange que les mots, dans la même
+               ligne — rien ne bouge. */
             min-height: 1.25em;
         }
 
-        /* La ligne en gras au-dessus de la promesse (V7). */
+        /* LA promesse : le seul gros titre de la page. La personne
+           au-dessus est le contexte, celle-ci est la raison d'agir. */
         p.lede {
-            font-size: 18px;
-            line-height: 1.4;
-            margin: 0 0 8px;
+            font-size: clamp(22px, 6.5vw, 28px);
+            line-height: 1.25;
+            margin: 0 0 10px;
             font-weight: 700;
         }
 
@@ -299,7 +302,7 @@
             function fitTitle() {
                 // Une seule ligne quoi qu'il arrive : on repart de la
                 // taille CSS, puis on réduit jusqu'à ce que ça tienne.
-                var size = 26;
+                var size = 16;
                 titleEl.style.fontSize = '';
                 while (titleEl.scrollWidth > titleEl.clientWidth && size > 14) {
                     size -= 1;
