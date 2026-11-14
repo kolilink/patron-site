@@ -25,15 +25,15 @@ const card = read('scripts/invite-og-card.html');
 // Les textes exacts de la page.
 contains('titre sans nom : Patron', html, '<h1 id="title">Patron</h1>');
 contains('titre sans nom (script) : Patron', html, ": \"Patron\";");
-contains('promesse', html, '<p class="tagline">Note qui te doit, même sans internet.</p>');
+contains('promesse', html, '<p class="lede">Votre argent vous attend.</p>');
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
-contains('signature', html, '<div class="foot">Gratuit.</div>');
+contains('signature', html, '<div class="foot">Vous le méritez et vous ne payez rien.</div>');
 // Le nombre figé est réécrit chaque jour par refresh-shop-count : on vérifie
 // qu'il existe, pas sa valeur.
 matches('preuve (repli du nombre figé présent)', html, /<span id="shop-count" class="num">[1-9]\d*<\/span> vendeurs<\/strong> déjà sur Patron/);
 contains('preuve (lecture du nombre en direct)', html, 'public_shop_count');
-matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' t\\u2019invite sur Patron'/);
+matches('phrase nominative (nom nu, sans guillemets)', html, /name \+ ' vous invite sur Patron'/);
 notMatches('anciennes accroches absentes', html, /On t'invite sur Patron|Ton carnet|Note chaque vente|et fait pour les vendeurs/);
 notMatches('pas de meta description (dite une seule fois)', html, /name="description"/);
 notMatches('aucun guillemet autour du nom', html, /\\u00AB ' \+ name/);
@@ -56,8 +56,9 @@ notMatches('jamais le presse-papiers', html, /clipboard|execCommand/i);
 // La carte sociale (source de invite/og.png) : les textes exacts, jamais « boutique », plus l'ancienne accroche.
 // Même règle que la page : aucun point en fin de phrase.
 contains('carte : marque', card, '<div class="brand">Patron</div>');
-contains('carte : titre', card, '<div class="tagline">Ton commerce, dans ta poche.</div>');
-contains('carte : gratuit', card, '<div class="sub">Gratuit.</div>');
+contains('carte : titre', card, '<div class="tagline">Votre argent vous attend.</div>');
+contains('carte : signature', card, '<div class="sub">Vous le méritez et vous ne payez rien.</div>');
+notMatches('carte : vouvoiement, jamais « tu » ni « cadeau »', card, /Ton commerce|dans ta poche|Note qui te doit|même sans internet|>Gratuit\.<|cadeau/i);
 notMatches('carte : anciennes accroches retirées', card, /Ton carnet|Note chaque vente|et fait pour les vendeurs/);
 notMatches('carte : ancienne accroche retirée', card, /Plus de page perdue/);
 notMatches('carte : jamais « boutique » (toute vendeuse n\u2019a pas de boutique)', card, /boutique/i);
