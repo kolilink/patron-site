@@ -25,10 +25,10 @@ const card = read('scripts/invite-og-card.html');
 // Les textes exacts de la page.
 contains('titre sans nom : Patron', html, '<h1 id="title">Patron</h1>');
 contains('titre sans nom (script) : Patron', html, ": \"Patron\";");
-contains('promesse', html, '<p class="lede">Votre argent vous attend.</p>');
+contains('promesse', html, '<p class="lede">Votre argent vous attend</p>');
 contains('bouton App Store', html, "Télécharger sur l'App Store");
 contains('bouton Play Store', html, 'Télécharger sur Play Store');
-contains('signature', html, '<div class="foot">Vous le méritez et vous ne payez rien.</div>');
+contains('signature', html, '<div class="foot">Vous le méritez et vous ne payez rien</div>');
 // Le nombre figé est réécrit chaque jour par refresh-shop-count : on vérifie
 // qu'il existe, pas sa valeur.
 matches('preuve (repli du nombre figé présent)', html, /<span id="shop-count" class="num">[1-9]\d*<\/span> vendeurs<\/strong> déjà sur Patron/);
