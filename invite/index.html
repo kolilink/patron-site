@@ -74,16 +74,11 @@
         .card {
             max-width: 420px;
             width: 100%;
+            /* Décalage optique fixe. Aucune arrivée : la carte est
+               visible dès la première peinture. Le nom de la personne
+               qui invite ne fait qu'échanger les mots, dans la ligne
+               réservée. */
             transform: translateY(-28px);
-            /* Une seule arrivée : la carte reste invisible jusqu'à ce que
-               le nom soit résolu (ou le plafond de 400 ms atteint), puis
-               elle se révèle entière, d'un coup. */
-            opacity: 0;
-            transition: opacity .18s ease;
-        }
-
-        .card.ready {
-            opacity: 1;
         }
 
         h1 {
@@ -174,81 +169,29 @@
             text-underline-offset: 2px;
         }
 
-        /* La preuve, sous les boutons : elle s'installe en fondu, sans jamais
-           voyager. Le nombre est vérifié à chaque publication du site
-           (commerces réels, comptes de test exclus) et épinglé par la
-           garde. */
+        /* La preuve, sous les boutons : visible tout de suite. Le nombre
+           est vérifié à chaque publication du site (commerces réels,
+           comptes de test exclus) et épinglé par la garde. */
         .proof {
             font-variant-numeric: tabular-nums;
             margin-top: 18px;
             font-size: 13.5px;
-            opacity: 0;
-            animation: proof-in .6s ease .55s forwards;
+            opacity: .88;
         }
 
         .proof strong {
             font-weight: 700;
         }
 
-        @keyframes proof-in {
-            to {
-                opacity: .88;
-            }
-        }
-
-        /* Les seuls chiffres en vert (le vert « Réglé » de l'app) ;
-           ils roulent sur place, dans leur fenêtre — la ligne et la
-           position du nombre ne bougent jamais. */
+        /* Le nombre en vert (le vert « Réglé » de l'app). Il s'écrit
+           d'un coup, sans rouleau — la ligne ne bouge jamais. */
         .proof .num {
             color: #8CF0B3;
         }
 
-        .reel {
-            display: inline-block;
-            height: 1em;
-            overflow: hidden;
-            position: relative;
-            top: .13em;
-        }
-
-        .strip {
-            display: flex;
-            flex-direction: column;
-            transition: transform .95s cubic-bezier(.22, .8, .24, 1);
-        }
-
-        .strip span {
-            display: block;
-            height: 1em;
-            line-height: 1;
-            text-align: center;
-        }
-
         /* Les boutons sont ordonnés (le magasin de SON téléphone en
-           premier) avant d'apparaître : jamais le mauvais ordre. */
-        #stores {
-            opacity: 0;
-        }
-
-        #stores.ready {
-            opacity: 1;
-            transition: opacity .18s ease;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .card {
-                transition: none;
-            }
-
-            .proof {
-                animation: none;
-                opacity: .88;
-            }
-
-            #stores.ready {
-                transition: none;
-            }
-        }
+           premier) avant la première peinture : jamais le mauvais
+           ordre, et visibles tout de suite. */
 
     </style>
     <noscript>
@@ -483,40 +426,14 @@
         })();
     </script>
     <script>
-        // Le rouleau des chiffres : chaque chiffre défile dans sa
-        // fenêtre et s'arrête sur le nombre demandé par le script
-        // principal (le nombre vrai lu en direct, ou son repli).
-        // Sans appel ou en mouvement réduit, le nombre reste écrit,
-        // immobile.
+        // Le nombre s'écrit d'un coup : le nombre vrai lu en direct (ou
+        // son repli) remplace le nombre figé, sans rouleau ni fondu.
         (function () {
             'use strict';
             var el = document.getElementById('shop-count');
             if (!el) return;
-            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             window.__rollProof = function (target) {
-                var digits = String(target).split('');
-                if (reduce) {
-                    el.textContent = digits.join('');
-                    return;
-                }
-                el.textContent = '';
-                digits.forEach(function (d, i) {
-                    var reel = document.createElement('span');
-                    reel.className = 'reel';
-                    var strip = document.createElement('span');
-                    strip.className = 'strip';
-                    for (var n = 0; n <= 9; n++) {
-                        var c = document.createElement('span');
-                        c.textContent = n;
-                        strip.appendChild(c);
-                    }
-                    var last = document.createElement('span');
-                    last.textContent = d;
-                    strip.appendChild(last);
-                    reel.appendChild(strip);
-                    el.appendChild(reel);
-                    setTimeout(function () { strip.style.transform = 'translateY(-10em)'; }, 550 + i * 70);
-                });
+                el.textContent = String(target);
             };
         })();
     </script>
