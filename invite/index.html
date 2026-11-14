@@ -165,14 +165,20 @@
             text-underline-offset: 2px;
         }
 
-        /* La preuve, sous les boutons : visible tout de suite. Le nombre
-           est vérifié à chaque publication du site (commerces réels,
-           comptes de test exclus) et épinglé par la garde. */
+        /* La preuve, sous les boutons. Elle n'affiche QUE le nombre lu en
+           direct (commerces réels, comptes de test exclus) : tant qu'il
+           n'est pas arrivé, la ligne garde sa place mais reste invisible
+           (rien ne bouge quand elle apparaît). Pas de réponse = pas de
+           ligne, jamais un nombre figé. */
         .proof {
             font-variant-numeric: tabular-nums;
             margin-top: 18px;
             font-size: 13.5px;
             opacity: .88;
+        }
+
+        .proof.pending {
+            visibility: hidden;
         }
 
         .proof strong {
@@ -232,7 +238,7 @@
             })();
         </script>
 
-        <div class="proof"><strong><span id="shop-count" class="num">219</span> vendeurs</strong> déjà sur Patron</div>
+        <div class="proof pending" id="proof"><strong><span id="shop-count" class="num">0</span> vendeurs</strong> déjà sur Patron</div>
 
         <div class="foot">Vous le méritez et vous ne payez rien</div>
 
@@ -388,20 +394,10 @@
             // publique public_shop_count ne renvoie QUE ce nombre (un
             // agrégat — aucune ligne, aucune donnée). La clé anon est
             // publique par conception ; c'est la fonction qui fait la
-            // frontière. Échec ou lenteur → le nombre figé dans la page
-            // (repli vérifié à chaque publication) prend le relais.
-            var countEl = document.getElementById('shop-count');
-            var baked = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
-            var shownCount = null;
-            function showCount(n) {
-                // Le repli à 900 ms peint vite le nombre figé, mais il ne doit
-                // jamais verrouiller : quand le vrai nombre arrive (même après
-                // 30 s de réseau lent), il remplace le repli. Sans appel ou nombre
-                // identique, rien ne bouge — un seul rouleau par valeur affichée.
-                if (n === shownCount) return;
-                shownCount = n;
-                if (window.__rollProof) window.__rollProof(n);
-            }
+            // frontière. Une seule écriture : la réponse en direct, quand
+            // elle arrive (même lente). Il n'y a plus de nombre figé ni de
+            // repli à 900 ms : ce repli écrasait le vrai nombre quand le
+            // direct répondait avant lui (233 puis retour à 215).
             fetch(SUPABASE_URL + '/rest/v1/rpc/public_shop_count', {
                 method: 'POST',
                 headers: {
@@ -412,24 +408,12 @@
                 body: '{}'
             })
                 .then(function (res) { return res.ok ? res.json() : null; })
-                .then(function (data) {
-                    var n = (typeof data === 'number') ? data : null;
-                    showCount((typeof n === 'number' && isFinite(n) && n > 0) ? Math.round(n) : baked);
+                .then(function (n) {
+                    if (typeof n !== 'number' || !isFinite(n) || n < 1) return;
+                    document.getElementById('shop-count').textContent = String(Math.round(n));
+                    document.getElementById('proof').classList.remove('pending');
                 })
-                .catch(function () { showCount(baked); });
-            setTimeout(function () { showCount(baked); }, 900);
-        })();
-    </script>
-    <script>
-        // Le nombre s'écrit d'un coup : le nombre vrai lu en direct (ou
-        // son repli) remplace le nombre figé, sans rouleau ni fondu.
-        (function () {
-            'use strict';
-            var el = document.getElementById('shop-count');
-            if (!el) return;
-            window.__rollProof = function (target) {
-                el.textContent = String(target);
-            };
+                .catch(function () { /* pas de réponse : pas de ligne */ });
         })();
     </script>
 </body>
