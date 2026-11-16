@@ -54,10 +54,20 @@
       card.appendChild(ph);
       card.appendChild(el('span', 'n', p.name));
       card.appendChild(el('span', 'pr', money(p.price_cents, d.currency)));
-      var sub = el('span', p.available ? 'q' : 'na', p.available ? '' : 'Épuisé'); card.appendChild(sub);
-      if (p.available && phone) card.addEventListener('click', function () {
-        order[i] = (order[i] || 0) + 1; card.className = 'p on'; sub.textContent = order[i] + ' dans la commande'; update();
-      });
+      var row = el('span', 'row'); var sub = el('span', p.available ? 'q' : 'na', p.available ? '' : 'Épuisé');
+      var minus = el('span', 'minus', '−'); minus.setAttribute('role', 'button'); minus.setAttribute('aria-label', 'Un de moins'); minus.hidden = true;
+      row.appendChild(sub); row.appendChild(minus); card.appendChild(row);
+      function show() {
+        var q = order[i] || 0;
+        card.className = 'p' + (q ? ' on' : '');
+        sub.textContent = q ? q + ' dans la commande' : '';
+        minus.hidden = !q;
+        update();
+      }
+      if (p.available && phone) {
+        card.addEventListener('click', function () { order[i] = Math.min(99, (order[i] || 0) + 1); show(); });
+        minus.addEventListener('click', function (e) { e.stopPropagation(); order[i] = Math.max(0, (order[i] || 0) - 1); show(); });
+      }
       grid.appendChild(card);
     });
     update();
