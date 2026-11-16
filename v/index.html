@@ -2,46 +2,73 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Vitrine · Patron</title>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#f7f6fb">
 <!-- SÉCURITÉ : aucun script en ligne ; seul /v/vitrine.js s'exécute. Les photos viennent de liens signés de courte durée. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; connect-src https://jnxpujsyvbenqgjbvifh.supabase.co; style-src 'unsafe-inline'; img-src 'self' data: https://jnxpujsyvbenqgjbvifh.supabase.co; base-uri 'none'; form-action 'none'">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Patron">
-<meta property="og:title" content="Ma boutique sur Patron">
-<meta property="og:description" content="Nos produits et nos prix. Commandez sur WhatsApp.">
+<meta property="og:title" content="Nos produits et nos prix">
+<meta property="og:description" content="Choisissez, puis commandez sur WhatsApp en un geste.">
 <link rel="preconnect" href="https://jnxpujsyvbenqgjbvifh.supabase.co" crossorigin>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f6f5fb;color:#17152b;font:16px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-main{max-width:640px;margin:0 auto;padding:20px 16px 120px}
-h1{font-size:24px;margin:4px 0 2px;line-height:1.2}.sub{color:#6b6880;margin:0 0 16px;font-size:14px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (min-width:520px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.p{background:#fff;border-radius:16px;padding:8px 8px 10px;box-shadow:0 1px 3px rgba(23,21,43,.08);display:flex;flex-direction:column;gap:4px;border:2px solid transparent;text-align:left;font:inherit;color:inherit;cursor:pointer}
-.p.on{border-color:#6366f1}.p.off{opacity:.5;cursor:default}
-.ph{aspect-ratio:1;border-radius:12px;background:#ece9f6;overflow:hidden;display:grid;place-items:center;color:#6b6880;font-weight:700;font-size:28px}
-.ph img{width:100%;height:100%;object-fit:cover;display:block}
-.n{font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.pr{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}.na{font-size:12px;color:#6b6880}
-.q{font-size:12px;font-weight:700;color:#6366f1}
-.row{display:flex;align-items:center;justify-content:space-between;min-height:28px}
-.minus{width:36px;height:36px;margin:-4px -4px -4px 0;border-radius:10px;background:#ece9f6;display:grid;place-items:center;font-size:20px;font-weight:700;color:#17152b}
-.minus[hidden]{display:none}
-.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#f6f5fb 30%)}
-.btn{display:block;max-width:608px;margin:0 auto;border:0;border-radius:14px;padding:15px;font:inherit;font-weight:700;font-size:17px;background:#1f8f4e;color:#fff;text-align:center;text-decoration:none}
-.btn.dis{background:#c9c8e8;pointer-events:none}
-.card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(23,21,43,.08)}
-.foot{text-align:center;color:#6b6880;font-size:12px;margin-top:22px}
+:root{--bg:#f7f6fb;--card:#fff;--ink:#15132a;--sub:#6b6880;--brand:#5b4fe9;--brand-soft:#efedfd;--wa:#1f8f4e;--warn:#9a6a00;--warn-soft:#fff3d6;--shadow:0 1px 2px rgba(21,19,42,.06),0 4px 14px rgba(21,19,42,.05)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:680px;margin:0 auto;padding:22px 16px 140px}
+.hd{margin:2px 2px 18px}
+h1{font-size:27px;line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
+.tag{display:inline-flex;align-items:center;gap:6px;color:var(--sub);font-size:14px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--wa)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.p{position:relative;background:var(--card);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;text-align:left;cursor:pointer;border:2px solid transparent;overflow:hidden;transition:transform .12s ease,border-color .15s ease;outline:none}
+.p:active{transform:scale(.97)}
+.p.on{border-color:var(--brand)}
+.p.pop{animation:pop .28s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.ph{position:relative;aspect-ratio:1;background:var(--brand-soft);overflow:hidden;display:grid;place-items:center}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s ease}
+.ph img.in{opacity:1}
+.cover{padding:14px;text-align:center;font-weight:700;font-size:18px;line-height:1.2;color:#4b3fb8;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.low{position:absolute;left:8px;bottom:8px;background:var(--warn-soft);color:var(--warn);font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+.badge{position:absolute;right:8px;top:8px;min-width:28px;height:28px;padding:0 8px;border-radius:999px;background:var(--brand);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;box-shadow:0 2px 8px rgba(91,79,233,.35)}
+.badge[hidden],.minus[hidden]{display:none}
+.body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px}
+.n{font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.row{display:flex;align-items:center;gap:8px;min-height:36px}
+.pr{flex:1;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.add,.minus{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
+.add{background:var(--brand-soft);color:var(--brand)}
+.minus{background:#f1f0f6;color:var(--ink)}
+.sk{border-radius:18px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.sk .ph{background:linear-gradient(90deg,#eeedf5 0%,#f6f5fb 50%,#eeedf5 100%);background-size:200% 100%;animation:sh 1.2s linear infinite}
+.sk .l{height:12px;margin:12px;border-radius:6px;background:#eeedf5}
+@keyframes sh{to{background-position:-200% 0}}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(247,246,251,0),var(--bg) 28%)}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:648px;margin:0 auto;border-radius:16px;padding:14px 18px;font-weight:700;font-size:16px;background:var(--wa);color:#fff;text-decoration:none;box-shadow:0 6px 18px rgba(31,143,78,.28);transition:transform .12s ease}
+.btn:active{transform:scale(.98)}
+.btn .sum{font-weight:600;opacity:.92;font-variant-numeric:tabular-nums}
+.btn.dis{background:#d8d6ea;box-shadow:none;pointer-events:none;justify-content:center}
+.card{background:var(--card);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.card h2{font-size:20px;margin:0 0 6px}.card p{margin:0;color:var(--sub)}
+.foot{margin:34px 0 0;text-align:center}
+.join{display:inline-flex;align-items:center;gap:6px;padding:12px 16px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
+.join b{color:var(--brand)}
+.made{display:block;margin-top:10px;color:var(--sub);font-size:12px}
+@media (prefers-reduced-motion:reduce){.p,.btn,.ph img{transition:none}.p.pop{animation:none}.sk .ph{animation:none}}
 </style>
 </head>
 <body>
 <main>
-<div id="app"><div class="card"><p class="sub">Chargement…</p></div></div>
-<noscript><div class="card"><p class="sub">Activez JavaScript pour voir la vitrine.</p></div></noscript>
-<p class="foot">Vitrine faite avec Patron</p>
+<div id="app" aria-live="polite"></div>
+<noscript><div class="card"><h2>Vitrine</h2><p>Activez JavaScript pour voir les produits.</p></div></noscript>
+<div class="foot" id="foot"></div>
 </main>
-<script src="/v/vitrine.js?v=20261116b"></script>
+<script src="/v/vitrine.js?v=20261116c"></script>
 </body>
 </html>
