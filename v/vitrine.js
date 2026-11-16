@@ -15,13 +15,12 @@
   // The one promotion on the page: credited to the shop that sent the visitor (its owner's invite slug, v251/v293).
   function joinLink(slug) {
     foot.textContent = '';
+    // Small, bottom right, one phrase (founder ruling 2026-11-16).
     var a = el('a', 'join');
     a.href = slug && /^[A-HJKMNP-Z2-9]{8}$/.test(slug) ? 'https://patron.kolilink.com/invite/?s=' + slug : JOIN;
     a.rel = 'noopener';
-    a.appendChild(document.createTextNode('Vous avez une boutique ? '));
-    a.appendChild(el('b', '', 'Créez votre vitrine gratuite'));
+    a.appendChild(el('b', '', 'Rejoignez Patron ›'));
     foot.appendChild(a);
-    foot.appendChild(el('span', 'made', 'Vitrine faite avec Patron'));
   }
 
   function closed(title, text) {
@@ -98,8 +97,14 @@
       btn.textContent = '';
       if (!count) { btn.className = 'btn dis'; btn.textContent = 'Choisissez vos produits'; btn.removeAttribute('href'); return; }
       btn.className = 'btn';
-      btn.appendChild(el('span', 'sum', count + (count > 1 ? ' articles · ' : ' article · ') + money(total, d.currency)));
-      btn.appendChild(el('span', '', 'Commander sur WhatsApp ›'));
+      // Never wraps on a small phone: the total stacked over the count, a short verb on the right (the green and the
+      // header already say WhatsApp).
+      var sum = el('span', 'sum');
+      sum.appendChild(el('span', 'tot', money(total, d.currency)));
+      sum.appendChild(el('span', 'cnt', count + (count > 1 ? ' articles' : ' article')));
+      btn.appendChild(sum);
+      btn.appendChild(el('span', 'go', 'Commander ›'));
+      btn.setAttribute('aria-label', 'Commander sur WhatsApp, ' + count + (count > 1 ? ' articles, ' : ' article, ') + money(total, d.currency));
       btn.href = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message());
     }
 
@@ -115,15 +120,17 @@
       } else ph.appendChild(el('div', 'cover', p.name));
       if (p.low) ph.appendChild(el('span', 'low', 'Bientôt épuisé'));
       var badge = el('span', 'badge', ''); badge.hidden = true; ph.appendChild(badge);
+      // « − » rides on the photo (top left, opposite the count), so the price keeps its whole line.
+      var minus = el('span', 'minus', '−'); minus.setAttribute('role', 'button'); minus.setAttribute('aria-label', 'Un de moins'); minus.hidden = true;
+      if (phone) ph.appendChild(minus);
       card.appendChild(ph);
 
       var body = el('div', 'body');
       body.appendChild(el('span', 'n', p.name));
       var row = el('div', 'row');
       row.appendChild(el('span', 'pr', money(p.price_cents, d.currency)));
-      var minus = el('span', 'minus', '−'); minus.setAttribute('role', 'button'); minus.setAttribute('aria-label', 'Un de moins'); minus.hidden = true;
       var add = el('span', 'add', '+'); add.setAttribute('aria-hidden', 'true');
-      if (phone) { row.appendChild(minus); row.appendChild(add); }
+      if (phone) row.appendChild(add);
       body.appendChild(row); card.appendChild(body);
 
       function show(popped) {

@@ -41,10 +41,10 @@ h1{font-size:27px;line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
 .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px}
 .n{font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
 .row{display:flex;align-items:center;gap:8px;min-height:36px}
-.pr{flex:1;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.pr{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .add,.minus{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
 .add{background:var(--brand-soft);color:var(--brand)}
-.minus{background:#f1f0f6;color:var(--ink)}
+.minus{position:absolute;left:8px;top:8px;width:32px;height:32px;border-radius:999px;background:rgba(255,255,255,.94);color:var(--ink);box-shadow:0 2px 8px rgba(21,19,42,.15);font-size:20px}
 .sk{border-radius:18px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
 .sk .ph{background:linear-gradient(90deg,#eeedf5 0%,#f6f5fb 50%,#eeedf5 100%);background-size:200% 100%;animation:sh 1.2s linear infinite}
 .sk .l{height:12px;margin:12px;border-radius:6px;background:#eeedf5}
@@ -52,14 +52,16 @@ h1{font-size:27px;line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
 .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(247,246,251,0),var(--bg) 28%)}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:648px;margin:0 auto;border-radius:16px;padding:14px 18px;font-weight:700;font-size:16px;background:var(--wa);color:#fff;text-decoration:none;box-shadow:0 6px 18px rgba(31,143,78,.28);transition:transform .12s ease}
 .btn:active{transform:scale(.98)}
-.btn .sum{font-weight:600;opacity:.92;font-variant-numeric:tabular-nums}
+.btn .sum{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.btn .tot{font-size:18px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.btn .cnt{font-size:13px;font-weight:600;opacity:.9;white-space:nowrap}
+.btn .go{white-space:nowrap;flex:none}
 .btn.dis{background:#d8d6ea;box-shadow:none;pointer-events:none;justify-content:center}
 .card{background:var(--card);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
 .card h2{font-size:20px;margin:0 0 6px}.card p{margin:0;color:var(--sub)}
-.foot{margin:34px 0 0;text-align:center}
-.join{display:inline-flex;align-items:center;gap:6px;padding:12px 16px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
-.join b{color:var(--brand)}
-.made{display:block;margin-top:10px;color:var(--sub);font-size:12px}
+.foot{margin:28px 0 0;text-align:right}
+.join{color:var(--sub);text-decoration:none;font-size:13px;font-weight:600;padding:8px 2px;display:inline-block}
+.join b{color:var(--brand);font-weight:700}
 @media (prefers-reduced-motion:reduce){.p,.btn,.ph img{transition:none}.p.pop{animation:none}.sk .ph{animation:none}}
 </style>
 </head>
@@ -69,6 +71,6 @@ h1{font-size:27px;line-height:1.15;margin:0 0 6px;letter-spacing:-.01em}
 <noscript><div class="card"><h2>Vitrine</h2><p>Activez JavaScript pour voir les produits.</p></div></noscript>
 <div class="foot" id="foot"></div>
 </main>
-<script src="/v/vitrine.js?v=20261116c"></script>
+<script src="/v/vitrine.js?v=20261116d"></script>
 </body>
 </html>
