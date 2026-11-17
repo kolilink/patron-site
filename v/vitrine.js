@@ -15,11 +15,11 @@
   // The one promotion on the page: credited to the shop that sent the visitor (its owner's invite slug, v251/v293).
   function joinLink(slug) {
     foot.textContent = '';
-    // Small, bottom right, one phrase (founder ruling 2026-11-16).
+    // Small, bottom right, one phrase: what SHE gains, not our name (founder ruling 2026-11-16).
     var a = el('a', 'join');
     a.href = slug && /^[A-HJKMNP-Z2-9]{8}$/.test(slug) ? 'https://patron.kolilink.com/invite/?s=' + slug : JOIN;
     a.rel = 'noopener';
-    a.appendChild(el('b', '', 'Rejoignez Patron ›'));
+    a.appendChild(el('b', '', 'Crée ta boutique gratuite ›'));
     foot.appendChild(a);
   }
 
@@ -37,7 +37,7 @@
     app.appendChild(hd); app.appendChild(g);
   })();
 
-  if (!/^[A-Za-z0-9_-]{22}$/.test(t)) { closed('Vitrine indisponible', 'Ce lien ne mène à aucune vitrine. Demandez le bon lien à la boutique.'); return; }
+  if (!/^[A-Za-z0-9_-]{22}$/.test(t)) { closed('Boutique introuvable', 'Ce lien ne mène à aucune boutique. Demandez le bon lien au commerçant.'); return; }
 
   var WHOLE = { GNF: 1, XOF: 1, XAF: 1, JPY: 1, KRW: 1 };
   function money(cents, cur) {
@@ -49,12 +49,12 @@
   fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: t, referrerPolicy: 'no-referrer', cache: 'no-store' })
     .then(function (r) { return r.status === 429 ? { state: 'busy' } : r.json(); })
     .then(render)
-    .catch(function () { closed('Connexion lente', 'La vitrine n’a pas pu s’ouvrir. Réessayez dans un instant.'); });
+    .catch(function () { closed('Connexion lente', 'La boutique n’a pas pu s’ouvrir. Réessayez dans un instant.'); });
 
   function render(d) {
     if (!d || d.state === 'busy') { closed('Beaucoup de visites', 'Réessayez dans un instant.'); return; }
-    if (d.state !== 'open') { closed('Vitrine fermée', 'Cette boutique a fermé sa vitrine pour le moment.'); return; }
-    document.title = d.name + ' · Vitrine';
+    if (d.state !== 'open') { closed('Fermé pour le moment', 'Cette boutique n’est pas ouverte en ligne en ce moment. Revenez bientôt.'); return; }
+    document.title = d.name + ' · Boutique';
     app.textContent = '';
     // Only what can be bought (the server already filters; an older answer is filtered here too).
     var products = (d.products || []).filter(function (p) { return p && p.available !== false && p.price_cents > 0; });
@@ -63,13 +63,13 @@
     var hd = el('div', 'hd');
     hd.appendChild(el('h1', '', d.name));
     var tag = el('span', 'tag');
-    if (phone) { tag.appendChild(el('span', 'dot')); tag.appendChild(document.createTextNode('Commandez sur WhatsApp')); }
+    if (phone) { tag.appendChild(el('span', 'dot')); tag.appendChild(document.createTextNode('Ouvert · Commandez sur WhatsApp')); }
     else tag.textContent = 'Nos produits et nos prix';
     hd.appendChild(tag);
     app.appendChild(hd);
 
     if (!products.length) {
-      var c = el('div', 'card'); c.appendChild(el('h2', '', 'Nouveautés en route')); c.appendChild(el('p', '', 'La boutique prépare sa vitrine. Revenez bientôt.')); app.appendChild(c);
+      var c = el('div', 'card'); c.appendChild(el('h2', '', 'Nouveautés en route')); c.appendChild(el('p', '', 'La boutique prépare ses produits. Revenez bientôt.')); app.appendChild(c);
       joinLink(d.invite); return;
     }
 
@@ -87,7 +87,7 @@
         var q = order[i] || 0;
         if (q) { lines.push('• ' + q + ' × ' + p.name + ' — ' + money(q * p.price_cents, d.currency)); total += q * p.price_cents; }
       });
-      return 'Bonjour ' + d.name + ' 👋\nJ’ai vu votre vitrine. Je voudrais commander :\n' + lines.join('\n') +
+      return 'Bonjour ' + d.name + ' 👋\nJ’ai vu votre boutique en ligne. Je voudrais commander :\n' + lines.join('\n') +
         '\n\nTotal : ' + money(total, d.currency) + '\nC’est disponible ? Merci !';
     }
 
